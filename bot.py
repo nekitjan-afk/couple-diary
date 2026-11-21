@@ -51,7 +51,7 @@ async def cmd_link(message: types.Message):
 
 # ========== WEB SERVER (API для Mini App) ==========
 async def handle_index(request):
-    return web.FileResponse("webapp/index.html")
+    return web.FileResponse("index.html")
 
 async def api_add_event(request):
     data = await request.json()
