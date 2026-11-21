@@ -70,14 +70,21 @@ async def get_user_by_code(code: str):
 
 async def link_partners(user_id: int, partner_id: int):
     async with aiosqlite.connect(DB_PATH) as db:
+        # Убеждаемся, что оба пользователя существуют
+        await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
+        await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (partner_id,))
+        
         # Проверяем, что у обоих нет партнёра
         async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
-            if (await c.fetchone() or [None])[0]:
+            row = await c.fetchone()
+            if row and row[0]:
                 return False, "У тебя уже есть партнёр"
         async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (partner_id,)) as c:
-            if (await c.fetchone() or [None])[0]:
+            row = await c.fetchone()
+            if row and row[0]:
                 return False, "У этого пользователя уже есть партнёр"
         
+        # Привязываем взаимно
         await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (partner_id, user_id))
         await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (user_id, partner_id))
         await db.commit()
