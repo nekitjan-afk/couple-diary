@@ -23,7 +23,7 @@ async def cmd_start(message: types.Message):
     ])
     await message.answer(
         "Добро пожаловать в Couple Dairy!\n\n"
-        "Это ваше общее приложение — календарь и воспоминания.\n"
+        "Это ваше общее приложение — календарь.\n"
         "Нажми кнопку ниже.",
         reply_markup=kb
     )
@@ -92,6 +92,8 @@ async def api_unlink(request):
         return web.json_response({"ok": success, "message": msg})
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)})
+
+async def api_add_event(request):
     data = await request.json()
     user_id = data.get("user_id")
     title = data.get("title")
@@ -112,6 +114,7 @@ async def start_web_server():
     app.router.add_get("/", handle_index)
     app.router.add_get("/api/me", api_me)
     app.router.add_post("/api/link", api_link)
+    app.router.add_post("/api/unlink", api_unlink)
     app.router.add_post("/api/event", api_add_event)
     app.router.add_get("/api/events", api_get_events)
     
