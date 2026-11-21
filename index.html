@@ -68,33 +68,40 @@
         .sidebar-footer {
             padding: 16px 20px 28px;
             border-top: 1px solid #333;
+        }
+        .user-row {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
         }
-        .avatars-pair {
-            display: flex;
-            align-items: center;
-        }
-        .avatar {
-            width: 48px;
-            height: 48px;
+        .user-avatar, .avatar {
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: #333;
-            border: 3px solid #1c1c1e;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             overflow: hidden;
+            flex-shrink: 0;
         }
-        .avatar img {
+        .user-avatar img, .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        .user-info { font-size: 14px; }
+        .user-name { font-weight: 600; }
+        .user-username { opacity: 0.6; font-size: 13px; }
+        .avatars-pair {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .avatar.partner {
-            margin-left: -16px;
+            margin-left: -14px;
+            border: 3px solid #1c1c1e;
         }
         .overlay {
             position: fixed;
@@ -166,14 +173,10 @@
         <div class="menu-items">
             <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
             <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
-            <div class="menu-item" onclick="openSection('memories')">💌 Воспоминания</div>
             <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
         </div>
-        <div class="sidebar-footer">
-            <div class="avatars-pair" id="avatarsPair">
-                <div class="avatar" id="myAvatar">👤</div>
-                <!-- Партнёр появится после привязки -->
-            </div>
+        <div class="sidebar-footer" id="sidebarFooter">
+            <!-- Динамически меняется -->
         </div>
     </div>
 
@@ -201,24 +204,17 @@
             <div id="eventsList"><div class="empty">Загрузка...</div></div>
         </div>
 
-        <div id="memories" class="section">
-            <h2>Воспоминания</h2>
-            <input type="text" id="memTitle" placeholder="Название">
-            <input type="date" id="memDate">
-            <input type="text" id="memPlace" placeholder="Место">
-            <button onclick="addMemory()">Сохранить воспоминание</button>
-            <div id="memoriesList"><div class="empty">Пока нет воспоминаний</div></div>
-        </div>
-
         <div id="link" class="section">
             <h2>Привязать партнёра</h2>
-            <div class="link-box">
+            <div class="link-box" id="linkBox">
                 <div>Твой код:</div>
                 <div class="code" id="myCode">------</div>
                 <div style="font-size:14px;opacity:0.7;">Отправь этот код партнёру</div>
             </div>
-            <input type="text" id="partnerCode" placeholder="Введи код партнёра">
-            <button onclick="linkPartner()">Привязать</button>
+            <div id="linkForm">
+                <input type="text" id="partnerCode" placeholder="Введи код партнёра">
+                <button onclick="linkPartner()">Привязать</button>
+            </div>
             <div id="linkStatus" style="text-align:center;margin-top:16px;"></div>
         </div>
     </div>
@@ -230,32 +226,45 @@
 
         const user = tg.initDataUnsafe?.user || {};
         const userId = user.id || 123456789;
-
-        // Моя аватарка
-        const myAvatarEl = document.getElementById('myAvatar');
-        if (user.photo_url) {
-            myAvatarEl.innerHTML = `<img src="${user.photo_url}">`;
-        } else {
-            myAvatarEl.textContent = user.first_name ? user.first_name[0] : '👤';
-        }
-
-        // Код
         const myCode = String(userId).slice(-6).padStart(6, '0');
         document.getElementById('myCode').textContent = myCode;
 
-        // Проверяем, есть ли уже партнёр (пока из localStorage для теста)
-        function checkPartner() {
-            const partnerPhoto = localStorage.getItem('partnerPhoto');
-            const pair = document.getElementById('avatarsPair');
-            if (partnerPhoto && !document.getElementById('partnerAvatar')) {
-                const partnerDiv = document.createElement('div');
-                partnerDiv.className = 'avatar partner';
-                partnerDiv.id = 'partnerAvatar';
-                partnerDiv.innerHTML = `<img src="${partnerPhoto}">`;
-                pair.appendChild(partnerDiv);
+        function renderFooter() {
+            const footer = document.getElementById('sidebarFooter');
+            const hasPartner = localStorage.getItem('hasPartner') === 'true';
+
+            if (hasPartner) {
+                const partnerPhoto = localStorage.getItem('partnerPhoto') || 'https://i.pravatar.cc/150?img=47';
+                footer.innerHTML = `
+                    <div class="avatars-pair">
+                        <div class="avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
+                        <div class="avatar partner"><img src="${partnerPhoto}"></div>
+                    </div>
+                `;
+            } else {
+                footer.innerHTML = `
+                    <div class="user-row">
+                        <div class="user-avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
+                        <div class="user-info">
+                            <div class="user-name">${user.first_name || 'Пользователь'}</div>
+                            <div class="user-username">${user.username ? '@' + user.username : ''}</div>
+                        </div>
+                    </div>
+                `;
             }
         }
-        checkPartner();
+
+        function updateLinkUI() {
+            const hasPartner = localStorage.getItem('hasPartner') === 'true';
+            if (hasPartner) {
+                document.getElementById('linkBox').style.display = 'none';
+                document.getElementById('linkForm').style.display = 'none';
+                document.getElementById('linkStatus').textContent = 'Партнёр уже привязан';
+            }
+        }
+
+        renderFooter();
+        updateLinkUI();
 
         function openMenu() {
             document.getElementById('sidebar').classList.add('open');
@@ -269,10 +278,9 @@
             closeMenu();
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(name).classList.add('active');
-            const titles = { home: 'Главная', calendar: 'Календарь', memories: 'Воспоминания', link: 'Привязка' };
+            const titles = { home: 'Главная', calendar: 'Календарь', link: 'Привязка' };
             document.getElementById('pageTitle').textContent = titles[name] || name;
             if (name === 'calendar') loadEvents();
-            if (name === 'memories') loadMemories();
             if (name === 'home') updateDays();
         }
 
@@ -296,15 +304,21 @@
             }
         }
 
-        async function linkPartner() {
+        function linkPartner() {
+            if (localStorage.getItem('hasPartner') === 'true') {
+                tg.showAlert('Можно привязать только одного партнёра');
+                return;
+            }
             const code = document.getElementById('partnerCode').value.trim();
             if (!code) return tg.showAlert('Введи код');
-            
-            // Пока тестовая заглушка — сохраняем фейковое фото партнёра
-            // Позже заменим на реальный запрос к серверу
+
+            // Тестовая привязка
+            localStorage.setItem('hasPartner', 'true');
             localStorage.setItem('partnerPhoto', 'https://i.pravatar.cc/150?img=32');
-            document.getElementById('linkStatus').textContent = 'Партнёр привязан (тест)';
-            checkPartner();
+            document.getElementById('linkStatus').textContent = 'Партнёр успешно привязан';
+            document.getElementById('linkForm').style.display = 'none';
+            document.getElementById('linkBox').style.display = 'none';
+            renderFooter();
             tg.HapticFeedback.notificationOccurred('success');
         }
 
@@ -331,31 +345,6 @@
             c.innerHTML = events.length ? events.map(e => `
                 <div class="card"><strong>${e.title}</strong><br>${e.date}<br><small>${e.description||''}</small></div>
             `).join('') : '<div class="empty">Пока нет событий</div>';
-        }
-
-        async function addMemory() {
-            const title = document.getElementById('memTitle').value.trim();
-            const date = document.getElementById('memDate').value;
-            const place = document.getElementById('memPlace').value.trim();
-            if (!title || !date) return tg.showAlert('Заполни название и дату');
-            await fetch('/api/memory', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user_id: userId, title, date, place, photos:[]})
-            });
-            document.getElementById('memTitle').value = '';
-            document.getElementById('memDate').value = '';
-            document.getElementById('memPlace').value = '';
-            loadMemories();
-        }
-
-        async function loadMemories() {
-            const res = await fetch(`/api/memories?user_id=${userId}`);
-            const mems = await res.json();
-            const c = document.getElementById('memoriesList');
-            c.innerHTML = mems.length ? mems.map(m => `
-                <div class="card"><strong>${m.title}</strong><br>${m.date} • ${m.place||''}</div>
-            `).join('') : '<div class="empty">Пока нет воспоминаний</div>';
         }
 
         updateDays();
