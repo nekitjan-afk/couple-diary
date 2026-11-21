@@ -66,8 +66,11 @@
         }
         .menu-item:hover { background: rgba(255,255,255,0.08); }
         .sidebar-footer {
-            padding: 16px 20px 28px;
+            padding: 12px 16px 24px;
             border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .user-row {
             display: flex;
@@ -97,12 +100,18 @@
         .avatars-pair {
             display: flex;
             align-items: center;
-            justify-content: center;
         }
         .avatar.partner {
             margin-left: -14px;
             border: 3px solid #1c1c1e;
         }
+        .settings-btn {
+            font-size: 22px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 10px;
+        }
+        .settings-btn:hover { background: rgba(255,255,255,0.1); }
         .overlay {
             position: fixed;
             inset: 0;
@@ -162,6 +171,37 @@
             letter-spacing: 4px;
             margin: 10px 0;
         }
+        /* Settings modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: #1c1c1e;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .close-modal { font-size: 24px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -175,9 +215,7 @@
             <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
             <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
         </div>
-        <div class="sidebar-footer" id="sidebarFooter">
-            <!-- Динамически меняется -->
-        </div>
+        <div class="sidebar-footer" id="sidebarFooter"></div>
     </div>
 
     <div class="header">
@@ -190,9 +228,9 @@
             <div class="days-counter">
                 <div class="days-number" id="daysCount">—</div>
                 <div class="days-label">дней вместе</div>
-                <div class="together-since" id="sinceText">Укажи дату начала отношений</div>
+                <div class="together-since" id="sinceText"></div>
             </div>
-            <button onclick="setStartDate()">Указать дату начала отношений</button>
+            <div id="dateButtonContainer"></div>
         </div>
 
         <div id="calendar" class="section">
@@ -219,6 +257,19 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal" onclick="closeSettings(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">Настройки</div>
+                <div class="close-modal" onclick="closeSettings()">×</div>
+            </div>
+            <div style="opacity:0.7;text-align:center;padding:20px 0;">
+                Настройки появятся позже
+            </div>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -233,16 +284,17 @@
             const footer = document.getElementById('sidebarFooter');
             const hasPartner = localStorage.getItem('hasPartner') === 'true';
 
+            let leftContent = '';
             if (hasPartner) {
                 const partnerPhoto = localStorage.getItem('partnerPhoto') || 'https://i.pravatar.cc/150?img=47';
-                footer.innerHTML = `
+                leftContent = `
                     <div class="avatars-pair">
                         <div class="avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
                         <div class="avatar partner"><img src="${partnerPhoto}"></div>
                     </div>
                 `;
             } else {
-                footer.innerHTML = `
+                leftContent = `
                     <div class="user-row">
                         <div class="user-avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
                         <div class="user-info">
@@ -251,6 +303,32 @@
                         </div>
                     </div>
                 `;
+            }
+
+            footer.innerHTML = leftContent + `<div class="settings-btn" onclick="openSettings()">⚙️</div>`;
+        }
+
+        function updateHomeUI() {
+            const hasPartner = localStorage.getItem('hasPartner') === 'true';
+            const container = document.getElementById('dateButtonContainer');
+            const sinceText = document.getElementById('sinceText');
+
+            if (hasPartner) {
+                const start = localStorage.getItem('relationshipStart');
+                if (start) {
+                    const diff = Math.floor((new Date() - new Date(start)) / 86400000);
+                    document.getElementById('daysCount').textContent = diff;
+                    sinceText.textContent = 'Вместе с ' + new Date(start).toLocaleDateString('ru-RU');
+                    container.innerHTML = '';
+                } else {
+                    document.getElementById('daysCount').textContent = '—';
+                    sinceText.textContent = 'Укажи дату начала отношений';
+                    container.innerHTML = `<button onclick="setStartDate()">Указать дату начала отношений</button>`;
+                }
+            } else {
+                document.getElementById('daysCount').textContent = '—';
+                sinceText.textContent = 'Сначала привяжи партнёра';
+                container.innerHTML = '';
             }
         }
 
@@ -264,6 +342,7 @@
         }
 
         renderFooter();
+        updateHomeUI();
         updateLinkUI();
 
         function openMenu() {
@@ -281,26 +360,14 @@
             const titles = { home: 'Главная', calendar: 'Календарь', link: 'Привязка' };
             document.getElementById('pageTitle').textContent = titles[name] || name;
             if (name === 'calendar') loadEvents();
-            if (name === 'home') updateDays();
-        }
-
-        function updateDays() {
-            const start = localStorage.getItem('relationshipStart');
-            if (!start) {
-                document.getElementById('daysCount').textContent = '—';
-                document.getElementById('sinceText').textContent = 'Укажи дату начала отношений';
-                return;
-            }
-            const diff = Math.floor((new Date() - new Date(start)) / 86400000);
-            document.getElementById('daysCount').textContent = diff;
-            document.getElementById('sinceText').textContent = 'Вместе с ' + new Date(start).toLocaleDateString('ru-RU');
+            if (name === 'home') updateHomeUI();
         }
 
         function setStartDate() {
             const date = prompt('Дата начала (ГГГГ-ММ-ДД):', '2024-01-01');
             if (date) {
                 localStorage.setItem('relationshipStart', date);
-                updateDays();
+                updateHomeUI();
             }
         }
 
@@ -312,14 +379,24 @@
             const code = document.getElementById('partnerCode').value.trim();
             if (!code) return tg.showAlert('Введи код');
 
-            // Тестовая привязка
             localStorage.setItem('hasPartner', 'true');
             localStorage.setItem('partnerPhoto', 'https://i.pravatar.cc/150?img=32');
             document.getElementById('linkStatus').textContent = 'Партнёр успешно привязан';
             document.getElementById('linkForm').style.display = 'none';
             document.getElementById('linkBox').style.display = 'none';
             renderFooter();
+            updateHomeUI();
             tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function openSettings() {
+            closeMenu();
+            document.getElementById('settingsModal').classList.add('show');
+        }
+        function closeSettings(e) {
+            if (!e || e.target.id === 'settingsModal') {
+                document.getElementById('settingsModal').classList.remove('show');
+            }
         }
 
         async function addEvent() {
@@ -346,8 +423,6 @@
                 <div class="card"><strong>${e.title}</strong><br>${e.date}<br><small>${e.description||''}</small></div>
             `).join('') : '<div class="empty">Пока нет событий</div>';
         }
-
-        updateDays();
     </script>
 </body>
 </html>
