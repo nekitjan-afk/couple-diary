@@ -7,278 +7,89 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #0f0f0f);
-            color: var(--tg-theme-text-color, #ffffff);
-            min-height: 100vh;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; }
         .header { display: flex; align-items: center; padding: 16px 20px; }
-        .burger {
-            font-size: 28px; cursor: pointer; width: 40px; height: 40px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 12px; background: var(--tg-theme-secondary-bg-color, #1c1c1e);
-        }
+        .burger { font-size: 28px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #1c1c1e; }
         .header-title { flex: 1; text-align: center; font-weight: 600; font-size: 18px; margin-right: 40px; }
-        .sidebar {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
-            background: #1c1c1e; z-index: 1000; transition: left 0.3s ease;
-            display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.4);
-        }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: #1c1c1e; z-index: 1000; transition: left 0.3s; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
-        .sidebar-header { padding: 24px 24px 16px; font-size: 22px; font-weight: 700; }
-        .menu-items { flex: 1; }
-        .menu-item { padding: 16px 24px; font-size: 17px; cursor: pointer; display: flex; align-items: center; gap: 12px; }
-        .menu-item:hover { background: rgba(255,255,255,0.08); }
-        .sidebar-footer { padding: 12px 16px 24px; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; }
-        .user-row { display: flex; align-items: center; gap: 12px; }
-        .user-avatar, .avatar {
-            width: 42px; height: 42px; border-radius: 50%; background: #333;
-            display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0;
-        }
-        .user-avatar img, .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .user-info { font-size: 14px; }
-        .user-name { font-weight: 600; }
-        .user-username { opacity: 0.6; font-size: 13px; }
-        .avatars-pair { display: flex; align-items: center; }
-        .avatar.partner { margin-left: -14px; border: 3px solid #1c1c1e; }
-        .settings-btn { font-size: 22px; cursor: pointer; padding: 8px; border-radius: 10px; }
-        .settings-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-header { padding: 24px; font-size: 22px; font-weight: 700; }
+        .menu-item { padding: 16px 24px; font-size: 17px; cursor: pointer; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid #333; margin-top: auto; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
         .overlay.show { display: block; }
-        .content { padding: 10px 20px 40px; }
+        .content { padding: 20px; }
         .section { display: none; }
         .section.active { display: block; }
-        .days-counter { text-align: center; padding: 60px 20px 40px; }
-        .days-number {
-            font-size: 92px; font-weight: 800; line-height: 1;
-            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .days-label { font-size: 20px; opacity: 0.8; margin-top: 8px; }
-        .together-since { margin-top: 16px; font-size: 15px; opacity: 0.6; }
-        h2 { margin: 10px 0 20px; font-size: 24px; }
-        input, textarea, button {
-            width: 100%; padding: 16px; margin: 8px 0; border-radius: 14px; border: none;
-            font-size: 16px; background: var(--tg-theme-secondary-bg-color, #1c1c1e);
-            color: var(--tg-theme-text-color, #fff);
-        }
-        button { background: var(--tg-theme-button-color, #ff6b6b); color: white; font-weight: 600; cursor: pointer; }
-        .card { background: var(--tg-theme-secondary-bg-color, #1c1c1e); padding: 18px; border-radius: 16px; margin: 12px 0; }
-        .empty { text-align: center; opacity: 0.5; padding: 60px 0; }
-        .link-box { background: #1c1c1e; padding: 16px; border-radius: 14px; margin: 16px 0; text-align: center; }
-        .code { font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 10px 0; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
-        .modal.show { display: flex; }
-        .modal-content { background: #1c1c1e; width: 100%; max-width: 400px; border-radius: 20px 20px 0 0; padding: 20px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .modal-title { font-size: 18px; font-weight: 600; }
-        .close-modal { font-size: 24px; cursor: pointer; }
+        .code-box { background: #1c1c1e; padding: 20px; border-radius: 14px; text-align: center; margin: 20px 0; }
+        .code { font-size: 32px; font-weight: 700; letter-spacing: 6px; margin: 10px 0; color: #ff6b6b; }
+        input, button { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: none; font-size: 16px; }
+        button { background: #2481cc; color: white; font-weight: 600; }
+        .debug { position: fixed; bottom: 10px; left: 10px; right: 10px; background: #222; padding: 8px; font-size: 12px; border-radius: 8px; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="overlay" id="overlay" onclick="closeMenu()"></div>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">Couple Dairy</div>
-        <div class="menu-items">
-            <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
-            <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
-            <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
-        </div>
-        <div class="sidebar-footer" id="sidebarFooter"></div>
+        <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
+        <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
+        <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
+        <div class="sidebar-footer" id="footer">Загрузка...</div>
     </div>
 
     <div class="header">
         <div class="burger" onclick="openMenu()">☰</div>
-        <div class="header-title" id="pageTitle">Главная</div>
+        <div class="header-title">Привязка</div>
     </div>
 
     <div class="content">
-        <div id="home" class="section active">
-            <div class="days-counter">
-                <div class="days-number" id="daysCount">—</div>
-                <div class="days-label">дней вместе</div>
-                <div class="together-since" id="sinceText"></div>
-            </div>
-            <div id="dateButtonContainer"></div>
-        </div>
-        <div id="calendar" class="section">
-            <h2>Общий календарь</h2>
-            <input type="text" id="eventTitle" placeholder="Название события">
-            <input type="date" id="eventDate">
-            <textarea id="eventDesc" placeholder="Описание" rows="2"></textarea>
-            <button onclick="addEvent()">Добавить событие</button>
-            <div id="eventsList"><div class="empty">Загрузка...</div></div>
-        </div>
-        <div id="link" class="section">
+        <div id="link" class="section active">
             <h2>Привязать партнёра</h2>
-            <div class="link-box" id="linkBox">
+            <div class="code-box">
                 <div>Твой код:</div>
-                <div class="code" id="myCode">------</div>
-                <div style="font-size:14px;opacity:0.7;">Отправь этот код партнёру</div>
+                <div class="code" id="myCode">ЗАГРУЗКА</div>
             </div>
-            <div id="linkForm">
-                <input type="text" id="partnerCode" placeholder="Введи код партнёра">
-                <button onclick="linkPartner()">Привязать</button>
-            </div>
-            <div id="linkStatus" style="text-align:center;margin-top:16px;"></div>
+            <input type="text" id="partnerCode" placeholder="Код партнёра">
+            <button onclick="alert('Пока тест')">Привязать</button>
         </div>
     </div>
 
-    <div class="modal" id="settingsModal" onclick="closeSettings(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-title">Настройки</div>
-                <div class="close-modal" onclick="closeSettings()">×</div>
-            </div>
-            <div style="opacity:0.7;text-align:center;padding:20px 0;">Настройки появятся позже</div>
-        </div>
-    </div>
+    <div class="debug" id="debug">debug: старт</div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        const debug = document.getElementById('debug');
+        function log(msg) { debug.textContent = msg; console.log(msg); }
 
-        const user = tg.initDataUnsafe?.user || {};
-        const userId = user.id || Date.now() % 1000000; // запасной id если нет данных
-        let partner = null;
-
-        // Сразу показываем код
-        document.getElementById('myCode').textContent = String(userId).slice(-6).padStart(6, '0');
-
-        async function init() {
-            try {
-                const params = new URLSearchParams({
-                    user_id: userId,
-                    name: user.first_name || '',
-                    username: user.username || '',
-                    photo: user.photo_url || ''
-                });
-                const res = await fetch(`/api/me?${params}`);
-                const data = await res.json();
-                partner = data.partner;
-            } catch (e) {
-                console.error(e);
+        try {
+            const tg = window.Telegram?.WebApp;
+            log('TG: ' + (tg ? 'есть' : 'нет'));
+            
+            if (tg) {
+                tg.ready();
+                tg.expand();
             }
-            document.getElementById('myCode').textContent = String(userId).slice(-6).padStart(6, '0');
-            renderFooter();
-            updateHomeUI();
-            updateLinkUI();
-        }
 
-        function renderFooter() {
-            const footer = document.getElementById('sidebarFooter');
-            let left = '';
-            if (partner) {
-                left = `
-                    <div class="avatars-pair">
-                        <div class="avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
-                        <div class="avatar partner">${partner.photo ? `<img src="${partner.photo}">` : (partner.name?.[0] || '👤')}</div>
-                    </div>`;
-            } else {
-                left = `
-                    <div class="user-row">
-                        <div class="user-avatar">${user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '👤')}</div>
-                        <div class="user-info">
-                            <div class="user-name">${user.first_name || 'Пользователь'}</div>
-                            <div class="user-username">${user.username ? '@'+user.username : ''}</div>
-                        </div>
-                    </div>`;
-            }
-            footer.innerHTML = left + `<div class="settings-btn" onclick="openSettings()">⚙️</div>`;
-        }
+            const user = tg?.initDataUnsafe?.user;
+            log('User: ' + (user ? user.id : 'нет данных'));
 
-        function updateHomeUI() {
-            const container = document.getElementById('dateButtonContainer');
-            const sinceText = document.getElementById('sinceText');
-            if (partner) {
-                const start = localStorage.getItem('relationshipStart');
-                if (start) {
-                    const diff = Math.floor((new Date() - new Date(start)) / 86400000);
-                    document.getElementById('daysCount').textContent = diff;
-                    sinceText.textContent = 'Вместе с ' + new Date(start).toLocaleDateString('ru-RU');
-                    container.innerHTML = '';
-                } else {
-                    document.getElementById('daysCount').textContent = '—';
-                    sinceText.textContent = 'Укажи дату начала отношений';
-                    container.innerHTML = `<button onclick="setStartDate()">Указать дату начала отношений</button>`;
-                }
-            } else {
-                document.getElementById('daysCount').textContent = '—';
-                sinceText.textContent = 'Сначала привяжи партнёра';
-                container.innerHTML = '';
-            }
-        }
+            const userId = user?.id || Math.floor(Math.random() * 900000 + 100000);
+            const code = String(userId).slice(-6).padStart(6, '0');
+            
+            document.getElementById('myCode').textContent = code;
+            document.getElementById('footer').innerHTML = user 
+                ? `${user.first_name || 'Юзер'} ${user.username ? '@'+user.username : ''}`
+                : 'Нет данных Telegram';
 
-        function updateLinkUI() {
-            if (partner) {
-                document.getElementById('linkBox').style.display = 'none';
-                document.getElementById('linkForm').style.display = 'none';
-                document.getElementById('linkStatus').textContent = `Партнёр: ${partner.name || 'привязан'}`;
-            }
+            log('Код установлен: ' + code);
+        } catch (e) {
+            log('Ошибка: ' + e.message);
+            document.getElementById('myCode').textContent = 'ОШИБКА';
         }
 
         function openMenu() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
         function closeMenu() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-        function openSection(name) {
-            closeMenu();
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            document.getElementById('pageTitle').textContent = {home:'Главная', calendar:'Календарь', link:'Привязка'}[name] || name;
-            if (name === 'calendar') loadEvents();
-            if (name === 'home') updateHomeUI();
-        }
-        function setStartDate() {
-            const date = prompt('Дата начала (ГГГГ-ММ-ДД):', '2024-01-01');
-            if (date) { localStorage.setItem('relationshipStart', date); updateHomeUI(); }
-        }
-        async function linkPartner() {
-            if (partner) return tg.showAlert('У тебя уже есть партнёр');
-            const code = document.getElementById('partnerCode').value.trim();
-            if (!code) return tg.showAlert('Введи код');
-            const res = await fetch('/api/link', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user_id: userId, code})
-            });
-            const data = await res.json();
-            if (!data.ok) return tg.showAlert(data.error || 'Ошибка');
-            partner = data.partner;
-            document.getElementById('linkStatus').textContent = 'Партнёр успешно привязан!';
-            document.getElementById('linkForm').style.display = 'none';
-            document.getElementById('linkBox').style.display = 'none';
-            renderFooter();
-            updateHomeUI();
-            tg.HapticFeedback.notificationOccurred('success');
-        }
-        function openSettings() { closeMenu(); document.getElementById('settingsModal').classList.add('show'); }
-        function closeSettings(e) { if (!e || e.target.id === 'settingsModal') document.getElementById('settingsModal').classList.remove('show'); }
-
-        async function addEvent() {
-            const title = document.getElementById('eventTitle').value.trim();
-            const date = document.getElementById('eventDate').value;
-            const description = document.getElementById('eventDesc').value.trim();
-            if (!title || !date) return tg.showAlert('Заполни название и дату');
-            await fetch('/api/event', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user_id: userId, title, date, description})
-            });
-            document.getElementById('eventTitle').value = '';
-            document.getElementById('eventDate').value = '';
-            document.getElementById('eventDesc').value = '';
-            loadEvents();
-        }
-        async function loadEvents() {
-            const res = await fetch(`/api/events?user_id=${userId}`);
-            const events = await res.json();
-            document.getElementById('eventsList').innerHTML = events.length
-                ? events.map(e => `<div class="card"><strong>${e.title}</strong><br>${e.date}<br><small>${e.description||''}</small></div>`).join('')
-                : '<div class="empty">Пока нет событий</div>';
-        }
-
-        init();
+        function openSection(name) { closeMenu(); }
     </script>
 </body>
 </html>
