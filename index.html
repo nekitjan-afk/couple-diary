@@ -66,25 +66,36 @@
         }
         .menu-item:hover { background: rgba(255,255,255,0.08); }
         .sidebar-footer {
-            padding: 16px 20px 24px;
+            padding: 16px 20px 28px;
             border-top: 1px solid #333;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
         }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
+        .avatars-pair {
+            display: flex;
+            align-items: center;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background: #333;
+            border: 3px solid #1c1c1e;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
+            overflow: hidden;
         }
-        .user-info { font-size: 14px; }
-        .user-name { font-weight: 600; }
-        .user-username { opacity: 0.6; font-size: 13px; }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar.partner {
+            margin-left: -16px;
+        }
         .overlay {
             position: fixed;
             inset: 0;
@@ -159,10 +170,9 @@
             <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
         </div>
         <div class="sidebar-footer">
-            <div class="user-avatar" id="userAvatar">👤</div>
-            <div class="user-info">
-                <div class="user-name" id="userName">Загрузка...</div>
-                <div class="user-username" id="userUsername"></div>
+            <div class="avatars-pair" id="avatarsPair">
+                <div class="avatar" id="myAvatar">👤</div>
+                <!-- Партнёр появится после привязки -->
             </div>
         </div>
     </div>
@@ -221,16 +231,31 @@
         const user = tg.initDataUnsafe?.user || {};
         const userId = user.id || 123456789;
 
-        // Показываем аккаунт в меню
-        document.getElementById('userName').textContent = user.first_name || 'Пользователь';
-        document.getElementById('userUsername').textContent = user.username ? '@' + user.username : '';
+        // Моя аватарка
+        const myAvatarEl = document.getElementById('myAvatar');
         if (user.photo_url) {
-            document.getElementById('userAvatar').innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            myAvatarEl.innerHTML = `<img src="${user.photo_url}">`;
+        } else {
+            myAvatarEl.textContent = user.first_name ? user.first_name[0] : '👤';
         }
 
-        // Генерируем код из последних 6 цифр id
+        // Код
         const myCode = String(userId).slice(-6).padStart(6, '0');
         document.getElementById('myCode').textContent = myCode;
+
+        // Проверяем, есть ли уже партнёр (пока из localStorage для теста)
+        function checkPartner() {
+            const partnerPhoto = localStorage.getItem('partnerPhoto');
+            const pair = document.getElementById('avatarsPair');
+            if (partnerPhoto && !document.getElementById('partnerAvatar')) {
+                const partnerDiv = document.createElement('div');
+                partnerDiv.className = 'avatar partner';
+                partnerDiv.id = 'partnerAvatar';
+                partnerDiv.innerHTML = `<img src="${partnerPhoto}">`;
+                pair.appendChild(partnerDiv);
+            }
+        }
+        checkPartner();
 
         function openMenu() {
             document.getElementById('sidebar').classList.add('open');
@@ -273,9 +298,14 @@
 
         async function linkPartner() {
             const code = document.getElementById('partnerCode').value.trim();
-            if (!code || code.length < 4) return tg.showAlert('Введи код партнёра');
-            document.getElementById('linkStatus').textContent = 'Привязка пока в разработке...';
-            // Здесь позже будет запрос к API
+            if (!code) return tg.showAlert('Введи код');
+            
+            // Пока тестовая заглушка — сохраняем фейковое фото партнёра
+            // Позже заменим на реальный запрос к серверу
+            localStorage.setItem('partnerPhoto', 'https://i.pravatar.cc/150?img=32');
+            document.getElementById('linkStatus').textContent = 'Партнёр привязан (тест)';
+            checkPartner();
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
         async function addEvent() {
