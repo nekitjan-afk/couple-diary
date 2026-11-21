@@ -18,6 +18,20 @@ async def init_db():
             )
         """)
         
+        # Добавляем колонки, если их нет (для старых баз)
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN username TEXT")
+        except:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN photo_url TEXT")
+        except:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN link_code TEXT")
+        except:
+            pass
+        
         await db.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
