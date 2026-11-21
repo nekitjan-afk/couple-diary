@@ -140,18 +140,22 @@ function setDate() {
 async function doLink() {
   const code = document.getElementById('pCode').value.trim();
   if (!code) return tg.showAlert('Введи код');
-  const r = await fetch('/api/link', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user_id: userId, code})
-  });
-  const d = await r.json();
-  if (!d.ok) return tg.showAlert(d.error || 'Ошибка');
-  partner = d.partner;
-  renderFooter();
-  updateHome();
-  document.getElementById('linkMsg').textContent = 'Успешно привязан!';
-  tg.HapticFeedback.notificationOccurred('success');
+  try {
+    const r = await fetch('/api/link', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: userId, code})
+    });
+    const d = await r.json();
+    if (!d.ok) return tg.showAlert(d.error || 'Ошибка сервера');
+    partner = d.partner;
+    renderFooter();
+    updateHome();
+    document.getElementById('linkMsg').textContent = 'Успешно привязан!';
+    tg.HapticFeedback.notificationOccurred('success');
+  } catch (e) {
+    tg.showAlert('Ошибка соединения: ' + e.message);
+  }
 }
 
 async function addEvent() {
