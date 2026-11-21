@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Couple Dairy</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #0f0f0f);
+            color: var(--tg-theme-text-color, #ffffff);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            position: relative;
+        }
+        .burger {
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+        }
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 40px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            padding: 20px 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-header {
+            padding: 10px 24px 30px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .menu-item {
+            padding: 16px 24px;
+            font-size: 17px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255,255,255,0.08);
+        }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .overlay.show { display: block; }
+
+        /* Main content */
+        .content {
+            padding: 10px 20px 40px;
+        }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Days counter */
+        .days-counter {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+        .days-number {
+            font-size: 92px;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .days-label {
+            font-size: 20px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+        .together-since {
+            margin-top: 16px;
+            font-size: 15px;
+            opacity: 0.6;
+        }
+
+        /* Forms & cards */
+        h2 { margin: 10px 0 20px; font-size: 24px; }
+        input, textarea, button {
+            width: 100%;
+            padding: 16px;
+            margin: 8px 0;
+            border-radius: 14px;
+            border: none;
+            font-size: 16px;
+            background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+            color: var(--tg-theme-text-color, #fff);
+        }
+        button {
+            background: var(--tg-theme-button-color, #ff6b6b);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+            padding: 18px;
+            border-radius: 16px;
+            margin: 12px 0;
+        }
+        .empty { text-align: center; opacity: 0.5; padding: 60px 0; }
+    </style>
+</head>
+<body>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Couple Dairy</div>
+        <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
+        <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
+        <div class="menu-item" onclick="openSection('memories')">💌 Воспоминания</div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="burger" onclick="openMenu()">☰</div>
+        <div class="header-title" id="pageTitle">Главная</div>
+    </div>
+
+    <div class="content">
+
+        <!-- Главная -->
+        <div id="home" class="section active">
+            <div class="days-counter">
+                <div class="days-number" id="daysCount">0</div>
+                <div class="days-label">дней вместе</div>
+                <div class="together-since" id="sinceText">С какого числа вы вместе?</div>
+            </div>
+            <button onclick="setStartDate()">Указать дату начала отношений</button>
+        </div>
+
+        <!-- Календарь -->
+        <div id="calendar" class="section">
+            <h2>Общий календарь</h2>
+            <input type="text" id="eventTitle" placeholder="Название события">
+            <input type="date" id="eventDate">
+            <textarea id="eventDesc" placeholder="Описание (необязательно)" rows="2"></textarea>
+            <button onclick="addEvent()">Добавить событие</button>
+            <div id="eventsList"><div class="empty">Загрузка...</div></div>
+        </div>
+
+        <!-- Воспоминания -->
+        <div id="memories" class="section">
+            <h2>Воспоминания</h2>
+            <button onclick="toggleMemoryForm()">+ Создать воспоминание</button>
+            <div id="memoryForm" style="display:none; margin-top:12px;">
+                <input type="text" id="memTitle" placeholder="Название">
+                <input type="date" id="memDate">
+                <input type="text" id="memPlace" placeholder="Место">
+                <button onclick="addMemory()">Сохранить</button>
+            </div>
+            <div id="memoriesList"><div class="empty">Пока нет воспоминаний</div></div>
+        </div>
+
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        const userId = tg.initDataUnsafe?.user?.id || 123456789;
+
+        // Меню
+        function openMenu() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('show');
+        }
+        function closeMenu() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('show');
+        }
+        function openSection(name) {
+            closeMenu();
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+
+            const titles = { home: 'Главная', calendar: 'Календарь', memories: 'Воспоминания' };
+            document.getElementById('pageTitle').textContent = titles[name];
+
+            if (name === 'calendar') loadEvents();
+            if (name === 'memories') loadMemories();
+            if (name === 'home') updateDays();
+        }
+
+        // Дни вместе
+        function updateDays() {
+            const start = localStorage.getItem('relationshipStart');
+            if (!start) {
+                document.getElementById('daysCount').textContent = '—';
+                document.getElementById('sinceText').textContent = 'Укажи дату начала отношений';
+                return;
+            }
+            const startDate = new Date(start);
+            const today = new Date();
+            const diff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('daysCount').textContent = diff;
+            document.getElementById('sinceText').textContent = 'Вместе с ' + startDate.toLocaleDateString('ru-RU');
+        }
+
+        function setStartDate() {
+            const date = prompt('Введи дату начала отношений (ГГГГ-ММ-ДД):', '2024-01-01');
+            if (date) {
+                localStorage.setItem('relationshipStart', date);
+                updateDays();
+            }
+        }
+
+        // Календарь
+        async function addEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const description = document.getElementById('eventDesc').value.trim();
+            if (!title || !date) return tg.showAlert('Заполни название и дату');
+
+            await fetch('/api/event', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, title, date, description })
+            });
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventDesc').value = '';
+            loadEvents();
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        async function loadEvents() {
+            const res = await fetch(`/api/events?user_id=${userId}`);
+            const events = await res.json();
+            const container = document.getElementById('eventsList');
+            if (!events.length) {
+                container.innerHTML = '<div class="empty">Пока нет событий</div>';
+                return;
+            }
+            container.innerHTML = events.map(e => `
+                <div class="card">
+                    <strong>${e.title}</strong><br>
+                    ${e.date}<br>
+                    ${e.description ? `<small>${e.description}</small>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Воспоминания
+        function toggleMemoryForm() {
+            const form = document.getElementById('memoryForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function addMemory() {
+            const title = document.getElementById('memTitle').value.trim();
+            const date = document.getElementById('memDate').value;
+            const place = document.getElementById('memPlace').value.trim();
+            if (!title || !date) return tg.showAlert('Заполни название и дату');
+
+            await fetch('/api/memory', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, title, date, place, photos: [] })
+            });
+            document.getElementById('memTitle').value = '';
+            document.getElementById('memDate').value = '';
+            document.getElementById('memPlace').value = '';
+            document.getElementById('memoryForm').style.display = 'none';
+            loadMemories();
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        async function loadMemories() {
+            const res = await fetch(`/api/memories?user_id=${userId}`);
+            const memories = await res.json();
+            const container = document.getElementById('memoriesList');
+            if (!memories.length) {
+                container.innerHTML = '<div class="empty">Пока нет воспоминаний</div>';
+                return;
+            }
+            container.innerHTML = memories.map(m => `
+                <div class="card">
+                    <strong>${m.title}</strong><br>
+                    ${m.date} • ${m.place || 'Место не указано'}
+                </div>
+            `).join('');
+        }
+
+        // Старт
+        updateDays();
+    </script>
+</body>
+</html>
