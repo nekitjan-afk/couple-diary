@@ -141,19 +141,26 @@
         tg.expand();
 
         const user = tg.initDataUnsafe?.user || {};
-        const userId = user.id || 123456789;
+        const userId = user.id || Date.now() % 1000000; // запасной id если нет данных
         let partner = null;
 
+        // Сразу показываем код
+        document.getElementById('myCode').textContent = String(userId).slice(-6).padStart(6, '0');
+
         async function init() {
-            const params = new URLSearchParams({
-                user_id: userId,
-                name: user.first_name || '',
-                username: user.username || '',
-                photo: user.photo_url || ''
-            });
-            const res = await fetch(`/api/me?${params}`);
-            const data = await res.json();
-            partner = data.partner;
+            try {
+                const params = new URLSearchParams({
+                    user_id: userId,
+                    name: user.first_name || '',
+                    username: user.username || '',
+                    photo: user.photo_url || ''
+                });
+                const res = await fetch(`/api/me?${params}`);
+                const data = await res.json();
+                partner = data.partner;
+            } catch (e) {
+                console.error(e);
+            }
             document.getElementById('myCode').textContent = String(userId).slice(-6).padStart(6, '0');
             renderFooter();
             updateHomeUI();
