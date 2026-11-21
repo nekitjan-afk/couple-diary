@@ -83,7 +83,20 @@ async def link_partners(user_id: int, partner_id: int):
         await db.commit()
         return True, "Успешно"
 
-async def get_partner_info(user_id: int):
+async def unlink_partners(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Находим партнёра
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
+            row = await c.fetchone()
+            if not row or not row[0]:
+                return False, "Партнёр не привязан"
+            partner_id = row[0]
+        
+        # Отвязываем обоих
+        await db.execute("UPDATE users SET partner_id = NULL WHERE user_id = ?", (user_id,))
+        await db.execute("UPDATE users SET partner_id = NULL WHERE user_id = ?", (partner_id,))
+        await db.commit()
+        return True, "Отвязано"
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
             SELECT u2.user_id, u2.name, u2.username, u2.photo_url
