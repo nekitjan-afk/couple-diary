@@ -52,34 +52,37 @@ async def api_me(request):
     })
 
 async def api_link(request):
-    data = await request.json()
-    user_id = data.get("user_id")
-    code = data.get("code", "").strip()
-    
-    if not code:
-        return web.json_response({"ok": False, "error": "Введи код"})
-    
-    partner_row = await db.get_user_by_code(code)
-    if not partner_row:
-        return web.json_response({"ok": False, "error": "Код не найден"})
-    
-    partner_id = partner_row[0]
-    if partner_id == user_id:
-        return web.json_response({"ok": False, "error": "Нельзя привязать себя"})
-    
-    success, msg = await db.link_partners(user_id, partner_id)
-    if not success:
-        return web.json_response({"ok": False, "error": msg})
-    
-    return web.json_response({
-        "ok": True,
-        "partner": {
-            "id": partner_id,
-            "name": partner_row[1],
-            "username": partner_row[2],
-            "photo": partner_row[3]
-        }
-    })
+    try:
+        data = await request.json()
+        user_id = data.get("user_id")
+        code = str(data.get("code", "")).strip()
+        
+        if not code:
+            return web.json_response({"ok": False, "error": "Введи код"})
+        
+        partner_row = await db.get_user_by_code(code)
+        if not partner_row:
+            return web.json_response({"ok": False, "error": "Код не найден"})
+        
+        partner_id = partner_row[0]
+        if partner_id == user_id:
+            return web.json_response({"ok": False, "error": "Нельзя привязать себя"})
+        
+        success, msg = await db.link_partners(user_id, partner_id)
+        if not success:
+            return web.json_response({"ok": False, "error": msg})
+        
+        return web.json_response({
+            "ok": True,
+            "partner": {
+                "id": partner_id,
+                "name": partner_row[1],
+                "username": partner_row[2],
+                "photo": partner_row[3]
+            }
+        })
+    except Exception as e:
+        return web.json_response({"ok": False, "error": f"Сервер: {str(e)}"})
 
 async def api_add_event(request):
     data = await request.json()
