@@ -84,7 +84,14 @@ async def api_link(request):
     except Exception as e:
         return web.json_response({"ok": False, "error": f"Сервер: {str(e)}"})
 
-async def api_add_event(request):
+async def api_unlink(request):
+    try:
+        data = await request.json()
+        user_id = data.get("user_id")
+        success, msg = await db.unlink_partners(user_id)
+        return web.json_response({"ok": success, "message": msg})
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)})
     data = await request.json()
     user_id = data.get("user_id")
     title = data.get("title")
