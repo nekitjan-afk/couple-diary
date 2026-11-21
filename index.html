@@ -71,6 +71,7 @@ button{background:#2481cc;font-weight:600}
     <input id="pCode" placeholder="Код партнёра">
     <button onclick="doLink()">Привязать</button>
     <div id="linkMsg" style="text-align:center;margin-top:10px"></div>
+    <button id="unlinkBtn" onclick="doUnlink()" style="background:#ff4444;display:none;margin-top:20px;">Отвязать партнёра</button>
   </div>
 </div>
 
@@ -108,6 +109,7 @@ async function init() {
     if (partner) {
       document.getElementById('linkMsg').textContent = 'Партнёр уже привязан';
       document.getElementById('pCode').style.display = 'none';
+      document.getElementById('unlinkBtn').style.display = 'block';
     }
   } catch(e) {}
 }
@@ -137,7 +139,26 @@ function setDate() {
   if (d) { localStorage.setItem('relStart', d); updateHome(); }
 }
 
-async function doLink() {
+async function doUnlink() {
+  if (!confirm('Точно отвязать партнёра?')) return;
+  const r = await fetch('/api/unlink', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user_id: userId})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    partner = null;
+    renderFooter();
+    updateHome();
+    document.getElementById('linkMsg').textContent = 'Партнёр отвязан';
+    document.getElementById('unlinkBtn').style.display = 'none';
+    document.getElementById('pCode').style.display = 'block';
+    tg.showAlert('Отвязано');
+  } else {
+    tg.showAlert(d.error || 'Ошибка');
+  }
+}
   const code = document.getElementById('pCode').value.trim();
   if (!code) return tg.showAlert('Введи код');
   try {
