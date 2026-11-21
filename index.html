@@ -129,16 +129,18 @@ async function init() {
   try {
     const r = await fetch(`/api/me?user_id=${userId}&name=${encodeURIComponent(user.first_name||'')}&username=${user.username||''}&photo=${encodeURIComponent(user.photo_url||'')}`);
     const d = await r.json();
-    partner = d.partner;
-    renderFooter();
-    updateHome();
-    if (partner) {
+    if (d.partner) {
+      partner = d.partner;
+      renderFooter();
+      updateHome();
       document.getElementById('linkMsg').textContent = 'Партнёр привязан';
       document.getElementById('pCode').style.display = 'none';
       document.getElementById('linkBtn').style.display = 'none';
       document.getElementById('unlinkBtn').style.display = 'block';
     }
-  } catch(e) {}
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 async function doLink() {
