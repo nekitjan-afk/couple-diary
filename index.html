@@ -25,7 +25,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .section.active{display:block}
 .days{text-align:center;padding:50px 0 20px}
 .days-num{font-size:80px;font-weight:800;background:linear-gradient(135deg,#ff6b6b,#ff8e53);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-input,textarea,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;font-size:16px;background:#1c1c1e;color:#fff}
+input,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;font-size:16px;background:#1c1c1e;color:#fff}
 button{background:#2481cc;font-weight:600}
 .card{background:#1c1c1e;padding:16px;border-radius:14px;margin:10px 0}
 .code-box{background:#1c1c1e;padding:20px;border-radius:14px;text-align:center;margin:16px 0}
@@ -51,7 +51,7 @@ button{background:#2481cc;font-weight:600}
   <div id="home" class="section active">
     <div class="days">
       <div class="days-num" id="days">—</div>
-      <div id="daysText">Загрузка...</div>
+      <div id="daysText">Сначала привяжи партнёра</div>
     </div>
     <div id="dateBtn"></div>
   </div>
@@ -84,34 +84,19 @@ const user = tg.initDataUnsafe?.user || {};
 const userId = user.id || 0;
 let partner = null;
 
-// Сразу показываем код и футер
 document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
 renderFooter();
+updateHome();
 
 function renderFooter() {
   const f = document.getElementById('footer');
   const ava = user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '?');
-  if (partner && partner.photo) {
-    f.innerHTML = `<div class="avatar">${ava}</div><div class="avatar" style="margin-left:-12px;border:2px solid #1c1c1e"><img src="${partner.photo}"></div>`;
+  if (partner) {
+    const pAva = partner.photo ? `<img src="${partner.photo}">` : (partner.name?.[0] || '?');
+    f.innerHTML = `<div class="avatar">${ava}</div><div class="avatar" style="margin-left:-12px;border:2px solid #1c1c1e">${pAva}</div>`;
   } else {
     f.innerHTML = `<div class="avatar">${ava}</div><div><b>${user.first_name || 'Пользователь'}</b><br><small style="opacity:.6">${user.username ? '@'+user.username : ''}</small></div>`;
   }
-}
-
-async function init() {
-  if (!userId) return;
-  try {
-    const r = await fetch(`/api/me?user_id=${userId}&name=${encodeURIComponent(user.first_name||'')}&username=${user.username||''}&photo=${encodeURIComponent(user.photo_url||'')}`);
-    const d = await r.json();
-    partner = d.partner;
-    renderFooter();
-    updateHome();
-    if (partner) {
-      document.getElementById('linkMsg').textContent = 'Партнёр уже привязан';
-      document.getElementById('pCode').style.display = 'none';
-      document.getElementById('unlinkBtn').style.display = 'block';
-    }
-  } catch(e) {}
 }
 
 function updateHome() {
@@ -139,6 +124,47 @@ function setDate() {
   if (d) { localStorage.setItem('relStart', d); updateHome(); }
 }
 
+async function init() {
+  if (!userId) return;
+  try {
+    const r = await fetch(`/api/me?user_id=${userId}&name=${encodeURIComponent(user.first_name||'')}&username=${user.username||''}&photo=${encodeURIComponent(user.photo_url||'')}`);
+    const d = await r.json();
+    partner = d.partner;
+    renderFooter();
+    updateHome();
+    if (partner) {
+      document.getElementById('linkMsg').textContent = 'Партнёр уже привязан';
+      document.getElementById('pCode').style.display = 'none';
+      document.getElementById('unlinkBtn').style.display = 'block';
+    }
+  } catch(e) {
+    console.log('init error', e);
+  }
+}
+
+async function doLink() {
+  const code = document.getElementById('pCode').value.trim();
+  if (!code) return tg.showAlert('Введи код');
+  try {
+    const r = await fetch('/api/link', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: userId, code})
+    });
+    const d = await r.json();
+    if (!d.ok) return tg.showAlert(d.error || 'Ошибка');
+    partner = d.partner;
+    renderFooter();
+    updateHome();
+    document.getElementById('linkMsg').textContent = 'Успешно привязан!';
+    document.getElementById('unlinkBtn').style.display = 'block';
+    document.getElementById('pCode').style.display = 'none';
+    tg.HapticFeedback.notificationOccurred('success');
+  } catch(e) {
+    tg.showAlert('Ошибка: ' + e.message);
+  }
+}
+
 async function doUnlink() {
   if (!confirm('Точно отвязать партнёра?')) return;
   const r = await fetch('/api/unlink', {
@@ -159,25 +185,6 @@ async function doUnlink() {
     tg.showAlert(d.error || 'Ошибка');
   }
 }
-  const code = document.getElementById('pCode').value.trim();
-  if (!code) return tg.showAlert('Введи код');
-  try {
-    const r = await fetch('/api/link', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({user_id: userId, code})
-    });
-    const d = await r.json();
-    if (!d.ok) return tg.showAlert(d.error || 'Ошибка сервера');
-    partner = d.partner;
-    renderFooter();
-    updateHome();
-    document.getElementById('linkMsg').textContent = 'Успешно привязан!';
-    tg.HapticFeedback.notificationOccurred('success');
-  } catch (e) {
-    tg.showAlert('Ошибка соединения: ' + e.message);
-  }
-}
 
 async function addEvent() {
   const title = document.getElementById('evTitle').value.trim();
@@ -194,11 +201,13 @@ async function addEvent() {
 }
 
 async function loadEvents() {
-  const r = await fetch('/api/events?user_id=' + userId);
-  const list = await r.json();
-  document.getElementById('events').innerHTML = list.length
-    ? list.map(e => `<div class="card"><b>${e.title}</b><br>${e.date}</div>`).join('')
-    : '<div class="card">Пока пусто</div>';
+  try {
+    const r = await fetch('/api/events?user_id=' + userId);
+    const list = await r.json();
+    document.getElementById('events').innerHTML = list.length
+      ? list.map(e => `<div class="card"><b>${e.title}</b><br>${e.date}</div>`).join('')
+      : '<div class="card">Пока пусто</div>';
+  } catch(e) {}
 }
 
 function openMenu(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
