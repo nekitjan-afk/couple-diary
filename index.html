@@ -12,15 +12,11 @@
             background: var(--tg-theme-bg-color, #0f0f0f);
             color: var(--tg-theme-text-color, #ffffff);
             min-height: 100vh;
-            overflow-x: hidden;
         }
-
-        /* Header */
         .header {
             display: flex;
             align-items: center;
             padding: 16px 20px;
-            position: relative;
         }
         .burger {
             font-size: 28px;
@@ -40,26 +36,26 @@
             font-size: 18px;
             margin-right: 40px;
         }
-
-        /* Sidebar */
         .sidebar {
             position: fixed;
             top: 0;
             left: -280px;
             width: 280px;
             height: 100vh;
-            background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+            background: #1c1c1e;
             z-index: 1000;
             transition: left 0.3s ease;
-            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
             box-shadow: 4px 0 20px rgba(0,0,0,0.4);
         }
         .sidebar.open { left: 0; }
         .sidebar-header {
-            padding: 10px 24px 30px;
+            padding: 24px 24px 16px;
             font-size: 22px;
             font-weight: 700;
         }
+        .menu-items { flex: 1; }
         .menu-item {
             padding: 16px 24px;
             font-size: 17px;
@@ -68,9 +64,27 @@
             align-items: center;
             gap: 12px;
         }
-        .menu-item:hover, .menu-item.active {
-            background: rgba(255,255,255,0.08);
+        .menu-item:hover { background: rgba(255,255,255,0.08); }
+        .sidebar-footer {
+            padding: 16px 20px 24px;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .user-info { font-size: 14px; }
+        .user-name { font-weight: 600; }
+        .user-username { opacity: 0.6; font-size: 13px; }
         .overlay {
             position: fixed;
             inset: 0;
@@ -79,19 +93,10 @@
             display: none;
         }
         .overlay.show { display: block; }
-
-        /* Main content */
-        .content {
-            padding: 10px 20px 40px;
-        }
+        .content { padding: 10px 20px 40px; }
         .section { display: none; }
         .section.active { display: block; }
-
-        /* Days counter */
-        .days-counter {
-            text-align: center;
-            padding: 60px 20px 40px;
-        }
+        .days-counter { text-align: center; padding: 60px 20px 40px; }
         .days-number {
             font-size: 92px;
             font-weight: 800;
@@ -100,18 +105,8 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .days-label {
-            font-size: 20px;
-            opacity: 0.8;
-            margin-top: 8px;
-        }
-        .together-since {
-            margin-top: 16px;
-            font-size: 15px;
-            opacity: 0.6;
-        }
-
-        /* Forms & cards */
+        .days-label { font-size: 20px; opacity: 0.8; margin-top: 8px; }
+        .together-since { margin-top: 16px; font-size: 15px; opacity: 0.6; }
         h2 { margin: 10px 0 20px; font-size: 24px; }
         input, textarea, button {
             width: 100%;
@@ -136,62 +131,86 @@
             margin: 12px 0;
         }
         .empty { text-align: center; opacity: 0.5; padding: 60px 0; }
+        .link-box {
+            background: #1c1c1e;
+            padding: 16px;
+            border-radius: 14px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .code {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Overlay -->
     <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">Couple Dairy</div>
-        <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
-        <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
-        <div class="menu-item" onclick="openSection('memories')">💌 Воспоминания</div>
+        <div class="menu-items">
+            <div class="menu-item" onclick="openSection('home')">🏠 Главная</div>
+            <div class="menu-item" onclick="openSection('calendar')">📅 Календарь</div>
+            <div class="menu-item" onclick="openSection('memories')">💌 Воспоминания</div>
+            <div class="menu-item" onclick="openSection('link')">🔗 Привязать партнёра</div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Загрузка...</div>
+                <div class="user-username" id="userUsername"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Header -->
     <div class="header">
         <div class="burger" onclick="openMenu()">☰</div>
         <div class="header-title" id="pageTitle">Главная</div>
     </div>
 
     <div class="content">
-
-        <!-- Главная -->
         <div id="home" class="section active">
             <div class="days-counter">
-                <div class="days-number" id="daysCount">0</div>
+                <div class="days-number" id="daysCount">—</div>
                 <div class="days-label">дней вместе</div>
-                <div class="together-since" id="sinceText">С какого числа вы вместе?</div>
+                <div class="together-since" id="sinceText">Укажи дату начала отношений</div>
             </div>
             <button onclick="setStartDate()">Указать дату начала отношений</button>
         </div>
 
-        <!-- Календарь -->
         <div id="calendar" class="section">
             <h2>Общий календарь</h2>
             <input type="text" id="eventTitle" placeholder="Название события">
             <input type="date" id="eventDate">
-            <textarea id="eventDesc" placeholder="Описание (необязательно)" rows="2"></textarea>
+            <textarea id="eventDesc" placeholder="Описание" rows="2"></textarea>
             <button onclick="addEvent()">Добавить событие</button>
             <div id="eventsList"><div class="empty">Загрузка...</div></div>
         </div>
 
-        <!-- Воспоминания -->
         <div id="memories" class="section">
             <h2>Воспоминания</h2>
-            <button onclick="toggleMemoryForm()">+ Создать воспоминание</button>
-            <div id="memoryForm" style="display:none; margin-top:12px;">
-                <input type="text" id="memTitle" placeholder="Название">
-                <input type="date" id="memDate">
-                <input type="text" id="memPlace" placeholder="Место">
-                <button onclick="addMemory()">Сохранить</button>
-            </div>
+            <input type="text" id="memTitle" placeholder="Название">
+            <input type="date" id="memDate">
+            <input type="text" id="memPlace" placeholder="Место">
+            <button onclick="addMemory()">Сохранить воспоминание</button>
             <div id="memoriesList"><div class="empty">Пока нет воспоминаний</div></div>
         </div>
 
+        <div id="link" class="section">
+            <h2>Привязать партнёра</h2>
+            <div class="link-box">
+                <div>Твой код:</div>
+                <div class="code" id="myCode">------</div>
+                <div style="font-size:14px;opacity:0.7;">Отправь этот код партнёру</div>
+            </div>
+            <input type="text" id="partnerCode" placeholder="Введи код партнёра">
+            <button onclick="linkPartner()">Привязать</button>
+            <div id="linkStatus" style="text-align:center;margin-top:16px;"></div>
+        </div>
     </div>
 
     <script>
@@ -199,9 +218,20 @@
         tg.ready();
         tg.expand();
 
-        const userId = tg.initDataUnsafe?.user?.id || 123456789;
+        const user = tg.initDataUnsafe?.user || {};
+        const userId = user.id || 123456789;
 
-        // Меню
+        // Показываем аккаунт в меню
+        document.getElementById('userName').textContent = user.first_name || 'Пользователь';
+        document.getElementById('userUsername').textContent = user.username ? '@' + user.username : '';
+        if (user.photo_url) {
+            document.getElementById('userAvatar').innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        }
+
+        // Генерируем код из последних 6 цифр id
+        const myCode = String(userId).slice(-6).padStart(6, '0');
+        document.getElementById('myCode').textContent = myCode;
+
         function openMenu() {
             document.getElementById('sidebar').classList.add('open');
             document.getElementById('overlay').classList.add('show');
@@ -214,16 +244,13 @@
             closeMenu();
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(name).classList.add('active');
-
-            const titles = { home: 'Главная', calendar: 'Календарь', memories: 'Воспоминания' };
-            document.getElementById('pageTitle').textContent = titles[name];
-
+            const titles = { home: 'Главная', calendar: 'Календарь', memories: 'Воспоминания', link: 'Привязка' };
+            document.getElementById('pageTitle').textContent = titles[name] || name;
             if (name === 'calendar') loadEvents();
             if (name === 'memories') loadMemories();
             if (name === 'home') updateDays();
         }
 
-        // Дни вместе
         function updateDays() {
             const start = localStorage.getItem('relationshipStart');
             if (!start) {
@@ -231,61 +258,49 @@
                 document.getElementById('sinceText').textContent = 'Укажи дату начала отношений';
                 return;
             }
-            const startDate = new Date(start);
-            const today = new Date();
-            const diff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            const diff = Math.floor((new Date() - new Date(start)) / 86400000);
             document.getElementById('daysCount').textContent = diff;
-            document.getElementById('sinceText').textContent = 'Вместе с ' + startDate.toLocaleDateString('ru-RU');
+            document.getElementById('sinceText').textContent = 'Вместе с ' + new Date(start).toLocaleDateString('ru-RU');
         }
 
         function setStartDate() {
-            const date = prompt('Введи дату начала отношений (ГГГГ-ММ-ДД):', '2024-01-01');
+            const date = prompt('Дата начала (ГГГГ-ММ-ДД):', '2024-01-01');
             if (date) {
                 localStorage.setItem('relationshipStart', date);
                 updateDays();
             }
         }
 
-        // Календарь
+        async function linkPartner() {
+            const code = document.getElementById('partnerCode').value.trim();
+            if (!code || code.length < 4) return tg.showAlert('Введи код партнёра');
+            document.getElementById('linkStatus').textContent = 'Привязка пока в разработке...';
+            // Здесь позже будет запрос к API
+        }
+
         async function addEvent() {
             const title = document.getElementById('eventTitle').value.trim();
             const date = document.getElementById('eventDate').value;
             const description = document.getElementById('eventDesc').value.trim();
             if (!title || !date) return tg.showAlert('Заполни название и дату');
-
             await fetch('/api/event', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId, title, date, description })
+                body: JSON.stringify({user_id: userId, title, date, description})
             });
             document.getElementById('eventTitle').value = '';
             document.getElementById('eventDate').value = '';
             document.getElementById('eventDesc').value = '';
             loadEvents();
-            tg.HapticFeedback.notificationOccurred('success');
         }
 
         async function loadEvents() {
             const res = await fetch(`/api/events?user_id=${userId}`);
             const events = await res.json();
-            const container = document.getElementById('eventsList');
-            if (!events.length) {
-                container.innerHTML = '<div class="empty">Пока нет событий</div>';
-                return;
-            }
-            container.innerHTML = events.map(e => `
-                <div class="card">
-                    <strong>${e.title}</strong><br>
-                    ${e.date}<br>
-                    ${e.description ? `<small>${e.description}</small>` : ''}
-                </div>
-            `).join('');
-        }
-
-        // Воспоминания
-        function toggleMemoryForm() {
-            const form = document.getElementById('memoryForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            const c = document.getElementById('eventsList');
+            c.innerHTML = events.length ? events.map(e => `
+                <div class="card"><strong>${e.title}</strong><br>${e.date}<br><small>${e.description||''}</small></div>
+            `).join('') : '<div class="empty">Пока нет событий</div>';
         }
 
         async function addMemory() {
@@ -293,37 +308,26 @@
             const date = document.getElementById('memDate').value;
             const place = document.getElementById('memPlace').value.trim();
             if (!title || !date) return tg.showAlert('Заполни название и дату');
-
             await fetch('/api/memory', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId, title, date, place, photos: [] })
+                body: JSON.stringify({user_id: userId, title, date, place, photos:[]})
             });
             document.getElementById('memTitle').value = '';
             document.getElementById('memDate').value = '';
             document.getElementById('memPlace').value = '';
-            document.getElementById('memoryForm').style.display = 'none';
             loadMemories();
-            tg.HapticFeedback.notificationOccurred('success');
         }
 
         async function loadMemories() {
             const res = await fetch(`/api/memories?user_id=${userId}`);
-            const memories = await res.json();
-            const container = document.getElementById('memoriesList');
-            if (!memories.length) {
-                container.innerHTML = '<div class="empty">Пока нет воспоминаний</div>';
-                return;
-            }
-            container.innerHTML = memories.map(m => `
-                <div class="card">
-                    <strong>${m.title}</strong><br>
-                    ${m.date} • ${m.place || 'Место не указано'}
-                </div>
-            `).join('');
+            const mems = await res.json();
+            const c = document.getElementById('memoriesList');
+            c.innerHTML = mems.length ? mems.map(m => `
+                <div class="card"><strong>${m.title}</strong><br>${m.date} • ${m.place||''}</div>
+            `).join('') : '<div class="empty">Пока нет воспоминаний</div>';
         }
 
-        // Старт
         updateDays();
     </script>
 </body>
