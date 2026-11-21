@@ -6,17 +6,18 @@ DB_PATH = os.getenv("DB_PATH", "couple.db")
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
-        # Пользователи и связь пар
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
                 partner_id INTEGER,
                 name TEXT,
+                username TEXT,
+                photo_url TEXT,
+                link_code TEXT UNIQUE,
                 created_at TEXT
             )
         """)
         
-        # События календаря
         await db.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,58 +30,67 @@ async def init_db():
             )
         """)
         
-        # Воспоминания
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS memories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                partner_id INTEGER,
-                title TEXT,
-                date TEXT,
-                place TEXT,
-                photos TEXT,  -- JSON список file_id
-                created_at TEXT
-            )
-        """)
-        
         await db.commit()
 
-async def get_partner(user_id: int):
+async def get_or_create_user(user_id: int, name: str = None, username: str = None, photo_url: str = None):
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as cursor:
+        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
             row = await cursor.fetchone()
-            return row[0] if row else None
-
-async def link_partners(user1: int, user2: int):
-    async with aiosqlite.connect(DB_PATH) as db:
+            if row:
+                return row
+        
+        # Создаём нового пользователя с кодом
+        code = str(user_id)[-6:].zfill(6)
         now = datetime.now().isoformat()
         await db.execute("""
-            INSERT OR REPLACE INTO users (user_id, partner_id, created_at)
-            VALUES (?, ?, ?)
-        """, (user1, user2, now))
-        await db.execute("""
-            INSERT OR REPLACE INTO users (user_id, partner_id, created_at)
-            VALUES (?, ?, ?)
-        """, (user2, user1, now))
+            INSERT INTO users (user_id, name, username, photo_url, link_code, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (user_id, name, username, photo_url, code, now))
         await db.commit()
+        return (user_id, None, name, username, photo_url, code, now)
 
-# === Календарь ===
+async def get_user_by_code(code: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT user_id, name, username, photo_url FROM users WHERE link_code = ?", (code,)) as cursor:
+            return await cursor.fetchone()
+
+async def link_partners(user_id: int, partner_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Проверяем, что у обоих нет партнёра
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
+            if (await c.fetchone() or [None])[0]:
+                return False, "У тебя уже есть партнёр"
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (partner_id,)) as c:
+            if (await c.fetchone() or [None])[0]:
+                return False, "У этого пользователя уже есть партнёр"
+        
+        await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (partner_id, user_id))
+        await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (user_id, partner_id))
+        await db.commit()
+        return True, "Успешно"
+
+async def get_partner_info(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT u2.user_id, u2.name, u2.username, u2.photo_url
+            FROM users u1
+            JOIN users u2 ON u1.partner_id = u2.user_id
+            WHERE u1.user_id = ?
+        """, (user_id,)) as cursor:
+            return await cursor.fetchone()
+
 async def add_event(user_id: int, title: str, date: str, description: str = ""):
-    partner = await get_partner(user_id)
-    if not partner:
-        return False
+    partner = await get_partner_info(user_id)
+    partner_id = partner[0] if partner else None
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
             INSERT INTO events (user_id, partner_id, title, date, description, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (user_id, partner, title, date, description, datetime.now().isoformat()))
+        """, (user_id, partner_id, title, date, description, datetime.now().isoformat()))
         await db.commit()
     return True
 
 async def get_events(user_id: int):
-    partner = await get_partner(user_id)
-    if not partner:
-        return []
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
             SELECT title, date, description FROM events
@@ -88,35 +98,3 @@ async def get_events(user_id: int):
             ORDER BY date
         """, (user_id, user_id)) as cursor:
             return await cursor.fetchall()
-
-# === Воспоминания ===
-async def add_memory(user_id: int, title: str, date: str, place: str, photos: list):
-    partner = await get_partner(user_id)
-    if not partner:
-        return False
-    import json
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            INSERT INTO memories (user_id, partner_id, title, date, place, photos, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, partner, title, date, place, json.dumps(photos), datetime.now().isoformat()))
-        await db.commit()
-    return True
-
-async def get_memories(user_id: int):
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("""
-            SELECT title, date, place, photos FROM memories
-            WHERE user_id = ? OR partner_id = ?
-            ORDER BY date DESC
-        """, (user_id, user_id)) as cursor:
-            rows = await cursor.fetchall()
-            import json
-            return [
-                {
-                    "title": r[0],
-                    "date": r[1],
-                    "place": r[2],
-                    "photos": json.loads(r[3]) if r[3] else []
-                } for r in rows
-            ]
