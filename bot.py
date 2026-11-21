@@ -89,7 +89,7 @@ async def api_get_memories(request):
 async def start_web_server():
     app = web.Application()
     app.router.add_get("/", handle_index)
-    app.router.add_static("/webapp", "webapp")
+    #app.router.add_static("/webapp", "webapp")
     app.router.add_post("/api/event", api_add_event)
     app.router.add_get("/api/events", api_get_events)
     app.router.add_post("/api/memory", api_add_memory)
