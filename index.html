@@ -283,8 +283,20 @@ function showEventDetail(i) {
 function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show'); }
 function openRemind() {
   const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 2);
   document.getElementById('remindAt').value = now.toISOString().slice(0,16);
+  
+  const sel = document.getElementById('remindTarget');
+  if (!partner) {
+    sel.innerHTML = '<option value="me">Только мне</option>';
+    sel.value = 'me';
+  } else {
+    sel.innerHTML = `
+      <option value="me">Только мне</option>
+      <option value="partner">Только партнёру</option>
+      <option value="both">Нам обоим</option>
+    `;
+  }
   document.getElementById('remindModal').classList.add('show');
 }
 function closeRemind(e) {
@@ -292,9 +304,10 @@ function closeRemind(e) {
 }
 async function saveReminder() {
   const remindAt = document.getElementById('remindAt').value;
+  if (!remindAt) return tg.showAlert('Выбери дату и время');
+  const iso = remindAt.length === 16 ? remindAt : remindAt.slice(0,16);
   const target = document.getElementById('remindTarget').value;
   const customText = document.getElementById('remindText').value.trim() || 'Не забудьте о вашем событии';
-  if (!remindAt) return tg.showAlert('Выбери дату и время');
   const title = document.getElementById('detailTitle').textContent;
   const eventDate = document.getElementById('detailDate').textContent;
   const partnerId = partner ? partner.id : null;
@@ -302,7 +315,7 @@ async function saveReminder() {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
-      title, event_date: eventDate, remind_at: remindAt,
+      title, event_date: eventDate, remind_at: iso,
       user_id: userId, partner_id: partnerId, target, text: customText
     })
   });
@@ -326,10 +339,14 @@ async function addEventFromPlan() {
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({user_id:userId, title, date, description})
     });
+    if (!r.ok) {
+      const txt = await r.text();
+      return tg.showAlert('Ошибка сервера: ' + r.status + ' ' + txt.slice(0,100));
+    }
     const d = await r.json();
-    if (!d.ok && d.error) return tg.showAlert(d.error);
+    if (d && d.ok === false) return tg.showAlert(d.error || 'Ошибка');
   } catch(e) {
-    return tg.showAlert('Ошибка сохранения');
+    return tg.showAlert('Ошибка: ' + e.message);
   }
 
   document.getElementById('planEvTitle').value = '';
