@@ -161,6 +161,8 @@ async def mark_reminder_sent(reminder_id: int):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("UPDATE reminders SET sent = 1 WHERE id = ?", (reminder_id,))
         await db.commit()
+
+async def get_events(user_id: int):
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
             SELECT title, date, description FROM events
