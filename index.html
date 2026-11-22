@@ -171,20 +171,21 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const hasEvent = allEvents.find(e => e.date === dateStr);
-    const tip = hasEvent ? hasEvent.title : 'Событий не запланировано';
-    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}<div class="tooltip">${tip}</div></div>`;
+    const eventsOnDay = allEvents.filter(e => e.date === dateStr);
+    const tip = eventsOnDay.length ? (eventsOnDay.length > 1 ? `${eventsOnDay.length} события` : eventsOnDay[0].title) : 'Событий не запланировано';
+    html += `<div class="cal-day ${isToday?'today':''} ${eventsOnDay.length?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}<div class="tooltip">${tip}</div></div>`;
   }
   document.getElementById('calDays').innerHTML = html;
 }
 function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
 function onDateClick(date) {
-  const event = allEvents.find(e => e.date === date);
-  if (event) {
-    document.getElementById('detailTitle').textContent = event.title;
-    document.getElementById('detailDate').textContent = event.date;
-    document.getElementById('detailDesc').textContent = event.description || 'Без описания';
-    document.getElementById('eventDetailModal').classList.add('show');
+  const events = allEvents.filter(e => e.date === date);
+  if (events.length) {
+    const list = document.getElementById('eventsList');
+    list.innerHTML = `<div style="margin-bottom:12px;font-weight:600">События на ${date}</div>` +
+      events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('') +
+      `<button onclick="openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить ещё событие</button>`;
+    document.getElementById('eventsModal').classList.add('show');
     return;
   }
   const today = new Date();
@@ -192,9 +193,23 @@ function onDateClick(date) {
   if (new Date(date) < today) {
     return tg.showAlert('Нельзя планировать события задним числом');
   }
+  openPlanForDate(date);
+}
+function openPlanForDate(date) {
   window.selectedDate = date;
   document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
   document.getElementById('planModal').classList.add('show');
+  closeEvents();
+}
+function showEventDetailByDate(date, index) {
+  const events = allEvents.filter(e => e.date === date);
+  const e = events[index];
+  if (!e) return;
+  document.getElementById('detailTitle').textContent = e.title;
+  document.getElementById('detailDate').textContent = e.date;
+  document.getElementById('detailDesc').textContent = e.description || 'Без описания';
+  closeEvents();
+  document.getElementById('eventDetailModal').classList.add('show');
 }
 async function loadEvents() {
   try {
