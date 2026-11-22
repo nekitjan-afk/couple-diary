@@ -186,7 +186,7 @@ function onDateClick(date) {
     document.getElementById('detailDesc').textContent = event.description || 'Без описания';
     document.getElementById('eventDetailModal').classList.add('show');
   } else {
-    document.getElementById('evDate').value = date;
+    window.selectedDate = date;
     document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
     document.getElementById('planModal').classList.add('show');
   }
@@ -216,9 +216,9 @@ function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') doc
 function closePlan(e) { if (!e || e.target.id === 'planModal') document.getElementById('planModal').classList.remove('show'); }
 async function addEventFromPlan() {
   const title = document.getElementById('planEvTitle').value.trim();
-  const date = document.getElementById('evDate').value;
+  const date = window.selectedDate;
   const description = document.getElementById('planEvDesc').value.trim();
-  if (!title) return tg.showAlert('Введи название');
+  if (!title || !date) return tg.showAlert('Введи название');
   await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('planEvTitle').value = '';
   document.getElementById('planEvDesc').value = '';
