@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -256,11 +255,16 @@ async function addEventFromPlan() {
   const date = window.selectedDate;
   const description = document.getElementById('planEvDesc').value.trim();
   if (!title || !date) return tg.showAlert('Введи название');
+
+  const exists = allEvents.some(e => e.date === date && e.title.toLowerCase() === title.toLowerCase());
+  if (exists) return tg.showAlert('Событие с таким названием уже есть на эту дату');
+
   await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('planEvTitle').value = '';
   document.getElementById('planEvDesc').value = '';
   closePlan();
   loadEvents();
+  tg.HapticFeedback.notificationOccurred('success');
 }
 function renderFooter() {
   const f = document.getElementById('footer');
