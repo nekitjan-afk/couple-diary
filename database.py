@@ -153,11 +153,17 @@ async def get_due_reminders():
     now = datetime.now().strftime("%Y-%m-%dT%H:%M")
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
-            SELECT id, event_title, user_id, partner_id, target, custom_text 
+            SELECT id, event_title, user_id, partner_id, target, custom_text, remind_at
             FROM reminders 
-            WHERE substr(remind_at,1,16) <= ? AND sent = 0
-        """, (now,)) as cursor:
-            return await cursor.fetchall()
+            WHERE sent = 0
+        """) as cursor:
+            rows = await cursor.fetchall()
+            due = []
+            for row in rows:
+                remind_at = (row[6] or "")[:16]
+                if remind_at and remind_at <= now:
+                    due.append(row[:6])
+            return due
 
 async def mark_reminder_sent(reminder_id: int):
     async with aiosqlite.connect(DB_PATH) as db:
