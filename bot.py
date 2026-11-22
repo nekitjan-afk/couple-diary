@@ -109,6 +109,37 @@ async def api_get_events(request):
         {"title": e[0], "date": e[1], "description": e[2]} for e in events
     ])
 
+async def api_add_reminder(request):
+    try:
+        data = await request.json()
+        await db.add_reminder(
+            data.get("title"),
+            data.get("event_date"),
+            data.get("remind_at"),
+            data.get("user_id"),
+            data.get("partner_id"),
+            data.get("target")
+        )
+        return web.json_response({"ok": True})
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)})
+
+async def check_reminders():
+    while True:
+        try:
+            reminders = await db.get_due_reminders()
+            for r in reminders:
+                rid, title, uid, pid, target = r
+                text = f"Не забудьте о вашем событии:\n\n<b>{title}</b>"
+                if target in ("me", "both") and uid:
+                    await bot.send_message(uid, text, parse_mode="HTML")
+                if target in ("partner", "both") and pid:
+                    await bot.send_message(pid, text, parse_mode="HTML")
+                await db.mark_reminder_sent(rid)
+        except Exception as e:
+            print("Reminder error:", e)
+        await asyncio.sleep(30)
+
 async def start_web_server():
     app = web.Application()
     app.router.add_get("/", handle_index)
@@ -116,6 +147,7 @@ async def start_web_server():
     app.router.add_post("/api/link", api_link)
     app.router.add_post("/api/unlink", api_unlink)
     app.router.add_post("/api/event", api_add_event)
+    app.router.add_post("/api/reminder", api_add_reminder)
     app.router.add_get("/api/events", api_get_events)
     
     runner = web.AppRunner(app)
@@ -127,6 +159,7 @@ async def start_web_server():
 async def main():
     await db.init_db()
     await start_web_server()
+    asyncio.create_task(check_reminders())
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
