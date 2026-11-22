@@ -118,14 +118,16 @@ async def unlink_partners(user_id: int):
         await db.execute("UPDATE users SET partner_id = NULL WHERE user_id = ?", (partner_id,))
         await db.commit()
         return True, "Отвязано"
+
+async def get_partner_info(user_id: int):
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("""
-            SELECT u2.user_id, u2.name, u2.username, u2.photo_url
-            FROM users u1
-            JOIN users u2 ON u1.partner_id = u2.user_id
-            WHERE u1.user_id = ?
-        """, (user_id,)) as cursor:
-            return await cursor.fetchone()
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
+            row = await c.fetchone()
+            if not row or not row[0]:
+                return None
+            partner_id = row[0]
+        async with db.execute("SELECT user_id, name, username, photo_url FROM users WHERE user_id = ?", (partner_id,)) as c:
+            return await c.fetchone()
 
 async def add_event(user_id: int, title: str, date: str, description: str = ""):
     partner = await get_partner_info(user_id)
