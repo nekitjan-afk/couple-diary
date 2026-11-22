@@ -125,29 +125,40 @@ async def api_add_reminder(request):
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)})
 
+@dp.message(Command("testremind"))
+async def cmd_testremind(message: types.Message):
+    await message.answer("Тестовое напоминание:\n\n<b>Проверка</b>\nНе забудьте о событии", parse_mode="HTML")
+
 async def check_reminders():
-    print("Reminder checker started")
+    print("=== Reminder checker started ===")
     while True:
         try:
             reminders = await db.get_due_reminders()
-            if reminders:
-                print(f"Found {len(reminders)} due reminders")
+            print(f"Due reminders: {len(reminders)}")
             for r in reminders:
                 rid, title, uid, pid, target, custom = r
-                text = (custom or "Не забудьте о вашем событии") + f"\n\n<b>{title}</b>"
-                print(f"Sending reminder {rid} to {uid}/{pid} target={target}")
-                try:
-                    if target in ("me", "both") and uid:
+                text = f"{custom or 'Не забудьте о вашем событии'}\n\n<b>{title}</b>"
+                print(f"Processing {rid}: uid={uid} pid={pid} target={target}")
+                sent_any = False
+                if target in ("me", "both") and uid:
+                    try:
                         await bot.send_message(int(uid), text, parse_mode="HTML")
-                    if target in ("partner", "both") and pid:
+                        sent_any = True
+                        print(f"Sent to {uid}")
+                    except Exception as e:
+                        print(f"Fail send to {uid}: {e}")
+                if target in ("partner", "both") and pid:
+                    try:
                         await bot.send_message(int(pid), text, parse_mode="HTML")
+                        sent_any = True
+                        print(f"Sent to {pid}")
+                    except Exception as e:
+                        print(f"Fail send to {pid}: {e}")
+                if sent_any:
                     await db.mark_reminder_sent(rid)
-                    print(f"Reminder {rid} sent")
-                except Exception as send_err:
-                    print(f"Send error: {send_err}")
         except Exception as e:
-            print("Reminder check error:", e)
-        await asyncio.sleep(15)
+            print("Checker error:", e)
+        await asyncio.sleep(10)
 
 async def start_web_server():
     app = web.Application()
