@@ -141,12 +141,14 @@ async def add_event(user_id: int, title: str, date: str, description: str = ""):
     return True
 
 async def add_reminder(event_title: str, event_date: str, remind_at: str, user_id: int, partner_id: int, target: str, text: str = ""):
+    print(f"DB add_reminder: title={event_title}, remind_at={remind_at}, user={user_id}")
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
             INSERT INTO reminders (event_title, event_date, remind_at, user_id, partner_id, target, custom_text)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (event_title, event_date, remind_at, user_id, partner_id, target, text))
         await db.commit()
+    print("DB insert done")
     return True
 
 async def get_due_reminders():
