@@ -91,6 +91,18 @@ button{background:#2481cc;font-weight:600}
   </div>
 </div>
 
+<!-- Filters Modal -->
+<div class="modal" id="filtersModal" onclick="closeFilters(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Фильтры</div>
+      <div class="close-modal" onclick="closeFilters()">×</div>
+    </div>
+    <div class="cats" id="cats"></div>
+    <button onclick="closeFilters()">Готово</button>
+  </div>
+</div>
+
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready();
@@ -154,10 +166,24 @@ const DATE_IDEAS = [
   {cat:'сюрприз', title:'Сюрприз-завтрак', desc:'Организовать неожиданный завтрак'}
 ];
 
+const CATEGORIES = [
+  {id:'all', name:'Все'},
+  {id:'романтика', name:'Романтика'},
+  {id:'дом', name:'Дома'},
+  {id:'кино', name:'Кино'},
+  {id:'еда', name:'Еда'},
+  {id:'актив', name:'Активный отдых'},
+  {id:'город', name:'По городу'},
+  {id:'бюджет', name:'Бюджетные'},
+  {id:'сюрприз', name:'Сюрприз'},
+  {id:'творчество', name:'Творчество'},
+  {id:'вечер', name:'Вечерние'},
+  {id:'природа', name:'На природе'}
+];
+
 function renderCats() {
-  const cats = ['all', ...new Set(DATE_IDEAS.map(d => d.cat))];
-  document.getElementById('cats').innerHTML = cats.map(c => 
-    `<div class="cat ${c===currentCat?'active':''}" onclick="setCat('${c}')">${c==='all'?'Все':c}</div>`
+  document.getElementById('cats').innerHTML = CATEGORIES.map(c => 
+    `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`
   ).join('');
 }
 
@@ -165,6 +191,16 @@ function setCat(cat) {
   currentCat = cat;
   renderCats();
   document.getElementById('dateResult').innerHTML = '';
+  closeFilters();
+}
+
+function openFilters() {
+  document.getElementById('filtersModal').classList.add('show');
+}
+function closeFilters(e) {
+  if (!e || e.target.id === 'filtersModal') {
+    document.getElementById('filtersModal').classList.remove('show');
+  }
 }
 
 function randomDate() {
