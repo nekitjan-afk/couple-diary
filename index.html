@@ -105,7 +105,17 @@ button{background:#2481cc;font-weight:600}
 
 <div class="modal" id="filtersModal" onclick="closeFilters(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
 <div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="eventsModalTitle">События</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
-<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div onclick="backToDayList()" style="font-size:24px;cursor:pointer;padding:4px 12px 4px 0">←</div><div class="modal-title" id="detailTitle" style="flex:1"></div><div class="close-modal" onclick="closeEventDetail()">×</div></div><div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div><div id="detailDesc"></div></div></div>
+<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header" style="position:relative;justify-content:center">
+      <div onclick="backToDayList()" style="position:absolute;left:0;font-size:22px;cursor:pointer;padding:8px">←</div>
+      <div class="modal-title" id="detailTitle" style="text-align:center;max-width:70%"></div>
+      <div class="close-modal" onclick="closeEventDetail()" style="position:absolute;right:0">×</div>
+    </div>
+    <div id="detailDate" style="opacity:0.7;margin:8px 0 16px;text-align:center"></div>
+    <div id="detailDesc" style="line-height:1.5"></div>
+  </div>
+</div>
 <div class="modal" id="planModal" onclick="closePlan(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="planTitle">Запланировать</div><div class="close-modal" onclick="closePlan()">×</div></div><input id="planEvTitle" placeholder="Название"><textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea><button onclick="addEventFromPlan()">Запланировать событие</button></div></div>
 
 <script>
