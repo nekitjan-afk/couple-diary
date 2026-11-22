@@ -117,6 +117,26 @@ button{background:#2481cc;font-weight:600}
     <button onclick="openRemind()" style="background:#2a2a2e;">Напомнить</button>
   </div>
 </div>
+
+<div class="modal" id="remindModal" onclick="closeRemind(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Напоминание</div>
+      <div class="close-modal" onclick="closeRemind()">×</div>
+    </div>
+    <div style="margin-bottom:6px;opacity:0.8">Когда напомнить:</div>
+    <input type="datetime-local" id="remindAt">
+    <div style="margin:14px 0 6px;opacity:0.8">Кому отправить:</div>
+    <select id="remindTarget" style="width:100%;padding:14px;border-radius:12px;background:#2a2a2e;color:#fff;border:none;font-size:16px">
+      <option value="me">Только мне</option>
+      <option value="partner">Только партнёру</option>
+      <option value="both">Нам обоим</option>
+    </select>
+    <div style="margin:14px 0 6px;opacity:0.8">Текст сообщения:</div>
+    <textarea id="remindText" rows="3" placeholder="Не забудьте о вашем событии">Не забудьте о вашем событии</textarea>
+    <button onclick="saveReminder()" style="margin-top:8px">Установить напоминание</button>
+  </div>
+</div>
 <div class="modal" id="remindModal" onclick="closeRemind(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -278,6 +298,7 @@ function closeRemind(e) {
 async function saveReminder() {
   const remindAt = document.getElementById('remindAt').value;
   const target = document.getElementById('remindTarget').value;
+  const customText = document.getElementById('remindText').value.trim() || 'Не забудьте о вашем событии';
   if (!remindAt) return tg.showAlert('Выбери дату и время');
   const title = document.getElementById('detailTitle').textContent;
   const eventDate = document.getElementById('detailDate').textContent;
@@ -287,7 +308,7 @@ async function saveReminder() {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       title, event_date: eventDate, remind_at: remindAt,
-      user_id: userId, partner_id: partnerId, target
+      user_id: userId, partner_id: partnerId, target, text: customText
     })
   });
   closeRemind();
@@ -342,6 +363,8 @@ function setDate() {
   if (d) { localStorage.setItem('relStart', d); updateHome(); }
 }
 async function init() {
+  document.getElementById('planModal')?.classList.remove('show');
+  document.getElementById('remindModal')?.classList.remove('show');
   document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
   renderFooter();
   updateHome();
