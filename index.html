@@ -104,8 +104,8 @@ button{background:#2481cc;font-weight:600}
 </div>
 
 <div class="modal" id="filtersModal" onclick="closeFilters(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
-<div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Список событий</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
-<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="detailTitle"></div><div class="close-modal" onclick="closeEventDetail()">×</div></div><div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div><div id="detailDesc"></div></div></div>
+<div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="eventsModalTitle">События</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
+<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div onclick="backToDayList()" style="font-size:24px;cursor:pointer;padding:4px 12px 4px 0">←</div><div class="modal-title" id="detailTitle" style="flex:1"></div><div class="close-modal" onclick="closeEventDetail()">×</div></div><div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div><div id="detailDesc"></div></div></div>
 <div class="modal" id="planModal" onclick="closePlan(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="planTitle">Запланировать</div><div class="close-modal" onclick="closePlan()">×</div></div><input id="planEvTitle" placeholder="Название"><textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea><button onclick="addEventFromPlan()">Запланировать событие</button></div></div>
 
 <script>
@@ -182,8 +182,8 @@ function onDateClick(date) {
   const events = allEvents.filter(e => e.date === date);
   if (events.length) {
     const list = document.getElementById('eventsList');
-    list.innerHTML = `<div style="margin-bottom:12px;font-weight:600">События на ${date}</div>` +
-      events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('') +
+    document.getElementById('eventsModalTitle').textContent = 'События на ' + date;
+    list.innerHTML = events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('') +
       `<button onclick="openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить ещё событие</button>`;
     document.getElementById('eventsModal').classList.add('show');
     return;
@@ -224,6 +224,7 @@ async function loadEvents() {
   } catch(e) {}
 }
 function openEventsList() {
+  document.getElementById('eventsModalTitle').textContent = 'Все события';
   const list = document.getElementById('eventsList');
   list.innerHTML = allEvents.length ? allEvents.map((e,i) => `<div class="card" onclick="showEventDetail(${i})"><b>${e.title}</b><br><small>${e.date}</small></div>`).join('') : '<div class="card">Пока нет событий</div>';
   document.getElementById('eventsModal').classList.add('show');
