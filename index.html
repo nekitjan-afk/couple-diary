@@ -45,7 +45,9 @@ button{background:#2481cc;font-weight:600}
 .calendar{background:#1c1c1e;border-radius:16px;padding:12px;margin-bottom:16px}
 .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:600}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.cal-day{padding:10px 0;border-radius:10px;font-size:14px}
+.cal-day{padding:10px 0;border-radius:10px;font-size:14px;position:relative;cursor:pointer}
+.cal-day .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap;z-index:10;margin-bottom:6px;pointer-events:none}
+.cal-day:hover .tooltip{display:block}
 .cal-day.other{opacity:0.3}
 .cal-day.today{background:#2481cc}
 .cal-day.has-event{position:relative}
@@ -221,8 +223,6 @@ const DATE_IDEAS = [
   {cat:'сюрприз', title:'Сюрприз-завтрак', desc:'Организовать неожиданный завтрак'}
 ];
 
-// ... (rest of previous JS for dates, linking, etc. will be preserved in full file)
-
 const CATEGORIES = [
   {id:'all', name:'Все'},
   {id:'романтика', name:'Романтика'},
@@ -261,8 +261,9 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const hasEvent = allEvents.some(e => e.date === dateStr);
-    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="selectDate('${dateStr}')">${d}</div>`;
+    const hasEvent = allEvents.find(e => e.date === dateStr);
+    const tooltip = hasEvent ? hasEvent.title : 'Событий не запланировано';
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}<div class="tooltip">${tooltip}</div></div>`;
   }
   document.getElementById('calDays').innerHTML = html;
 }
