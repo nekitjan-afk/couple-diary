@@ -25,9 +25,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .section.active{display:block}
 .days{text-align:center;padding:50px 0 20px}
 .days-num{font-size:80px;font-weight:800;background:linear-gradient(135deg,#ff6b6b,#ff8e53);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-input,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;font-size:16px;background:#1c1c1e;color:#fff}
+input,button,textarea{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;font-size:16px;background:#1c1c1e;color:#fff}
 button{background:#2481cc;font-weight:600}
-.card{background:#1c1c1e;padding:16px;border-radius:14px;margin:10px 0}
+.card{background:#1c1c1e;padding:16px;border-radius:14px;margin:10px 0;cursor:pointer}
 .code-box{background:#1c1c1e;padding:20px;border-radius:14px;text-align:center;margin:16px 0}
 .code{font-size:28px;font-weight:700;letter-spacing:4px;margin:8px 0}
 .date-card{background:#1c1c1e;padding:20px;border-radius:16px;margin:16px 0;text-align:center}
@@ -38,10 +38,19 @@ button{background:#2481cc;font-weight:600}
 .cat.active{background:#2481cc}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:none;align-items:flex-end;justify-content:center}
 .modal.show{display:flex}
-.modal-content{background:#1c1c1e;width:100%;border-radius:20px 20px 0 0;padding:20px}
+.modal-content{background:#1c1c1e;width:100%;border-radius:20px 20px 0 0;padding:20px;max-height:80vh;overflow-y:auto}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .modal-title{font-size:18px;font-weight:600}
 .close-modal{font-size:28px;cursor:pointer}
+.calendar{background:#1c1c1e;border-radius:16px;padding:12px;margin-bottom:16px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-day{padding:10px 0;border-radius:10px;font-size:14px}
+.cal-day.other{opacity:0.3}
+.cal-day.today{background:#2481cc}
+.cal-day.has-event{position:relative}
+.cal-day.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#ff6b6b;border-radius:50%}
+.weekday{font-size:12px;opacity:0.6;padding:6px 0}
 </style>
 </head>
 <body>
@@ -68,19 +77,32 @@ button{background:#2481cc;font-weight:600}
     </div>
     <div id="dateBtn"></div>
   </div>
+
   <div id="calendar" class="section">
-    <h2>Календарь</h2>
+    <div class="calendar">
+      <div class="cal-header">
+        <span onclick="changeMonth(-1)" style="cursor:pointer;padding:8px">‹</span>
+        <span id="calTitle"></span>
+        <span onclick="changeMonth(1)" style="cursor:pointer;padding:8px">›</span>
+      </div>
+      <div class="cal-grid" id="calWeekdays"></div>
+      <div class="cal-grid" id="calDays"></div>
+    </div>
+    <button onclick="openEventsList()">Список событий</button>
+    <h3 style="margin:16px 0 8px">Добавить событие</h3>
     <input id="evTitle" placeholder="Название">
     <input id="evDate" type="date">
-    <button onclick="addEvent()">Добавить событие</button>
-    <div id="events"></div>
+    <textarea id="evDesc" placeholder="Описание" rows="2"></textarea>
+    <button onclick="addEvent()">Добавить</button>
   </div>
+
   <div id="dates" class="section">
     <h2>Генератор свиданий</h2>
     <button onclick="openFilters()" style="background:#2a2a2e;">Фильтры</button>
     <button onclick="randomDate()">🎲 Случайное свидание</button>
     <div id="dateResult"></div>
   </div>
+
   <div id="link" class="section">
     <h2>Привязать партнёра</h2>
     <div class="code-box">
@@ -105,6 +127,27 @@ button{background:#2481cc;font-weight:600}
   </div>
 </div>
 
+<div class="modal" id="eventsModal" onclick="closeEvents(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Список событий</div>
+      <div class="close-modal" onclick="closeEvents()">×</div>
+    </div>
+    <div id="eventsList"></div>
+  </div>
+</div>
+
+<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="detailTitle"></div>
+      <div class="close-modal" onclick="closeEventDetail()">×</div>
+    </div>
+    <div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div>
+    <div id="detailDesc"></div>
+  </div>
+</div>
+
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
@@ -113,6 +156,8 @@ const user = tg.initDataUnsafe?.user || {};
 const userId = user.id || 0;
 let partner = null;
 let currentCat = 'all';
+let currentDate = new Date();
+let allEvents = [];
 
 const DATE_IDEAS = [
   {cat:'романтика', title:'Ужин при свечах', desc:'Приготовить что-то простое вместе и поужинать при свечах дома'},
@@ -166,6 +211,8 @@ const DATE_IDEAS = [
   {cat:'сюрприз', title:'Сюрприз-завтрак', desc:'Организовать неожиданный завтрак'}
 ];
 
+// ... (rest of previous JS for dates, linking, etc. will be preserved in full file)
+
 const CATEGORIES = [
   {id:'all', name:'Все'},
   {id:'романтика', name:'Романтика'},
@@ -181,33 +228,84 @@ const CATEGORIES = [
   {id:'природа', name:'На природе'}
 ];
 
-function renderCats() {
-  document.getElementById('cats').innerHTML = CATEGORIES.map(c =>
-    `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`
-  ).join('');
-}
-function setCat(cat) {
-  currentCat = cat;
-  renderCats();
-  document.getElementById('dateResult').innerHTML = '';
-  closeFilters();
-}
-function openFilters() { document.getElementById('filtersModal').classList.add('show'); }
-function closeFilters(e) {
-  if (!e || e.target.id === 'filtersModal') document.getElementById('filtersModal').classList.remove('show');
-}
-function randomDate() {
-  let list = currentCat === 'all' ? DATE_IDEAS : DATE_IDEAS.filter(d => d.cat === currentCat);
-  if (!list.length) return;
-  const idea = list[Math.floor(Math.random() * list.length)];
-  document.getElementById('dateResult').innerHTML = `<div class="date-card"><div class="date-title">${idea.title}</div><div class="date-desc">${idea.desc}</div></div>`;
-  tg.HapticFeedback.impactOccurred('light');
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  document.getElementById('calTitle').textContent = monthNames[month] + ' ' + year;
+
+  const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('calWeekdays').innerHTML = weekdays.map(d => `<div class="weekday">${d}</div>`).join('');
+
+  const firstDay = new Date(year, month, 1);
+  let start = firstDay.getDay() || 7;
+  start--;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const prevDays = new Date(year, month, 0).getDate();
+
+  let html = '';
+  for (let i = start; i > 0; i--) {
+    html += `<div class="cal-day other">${prevDays - i + 1}</div>`;
+  }
+  const today = new Date();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
+    const hasEvent = allEvents.some(e => e.date === dateStr);
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="selectDate('${dateStr}')">${d}</div>`;
+  }
+  document.getElementById('calDays').innerHTML = html;
 }
 
+function changeMonth(dir) {
+  currentDate.setMonth(currentDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function selectDate(date) {
+  document.getElementById('evDate').value = date;
+}
+
+async function loadEvents() {
+  try {
+    const r = await fetch('/api/events?user_id=' + userId);
+    allEvents = await r.json();
+    renderCalendar();
+  } catch(e) {}
+}
+
+function openEventsList() {
+  const list = document.getElementById('eventsList');
+  if (!allEvents.length) {
+    list.innerHTML = '<div class="card">Пока нет событий</div>';
+  } else {
+    list.innerHTML = allEvents.map((e,i) => 
+      `<div class="card" onclick="showEventDetail(${i})"><b>${e.title}</b><br><small>${e.date}</small></div>`
+    ).join('');
+  }
+  document.getElementById('eventsModal').classList.add('show');
+}
+function closeEvents(e) {
+  if (!e || e.target.id === 'eventsModal') document.getElementById('eventsModal').classList.remove('show');
+}
+function showEventDetail(i) {
+  const e = allEvents[i];
+  document.getElementById('detailTitle').textContent = e.title;
+  document.getElementById('detailDate').textContent = e.date;
+  document.getElementById('detailDesc').textContent = e.description || 'Без описания';
+  closeEvents();
+  document.getElementById('eventDetailModal').classList.add('show');
+}
+function closeEventDetail(e) {
+  if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show');
+}
+
+// (остальной код дат, привязки и т.д. остаётся как был)
 document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
 renderFooter();
 updateHome();
 renderCats();
+renderCalendar();
 
 function renderFooter() {
   const f = document.getElementById('footer');
@@ -257,6 +355,7 @@ async function init() {
       document.getElementById('unlinkBtn').style.display = 'block';
     }
   } catch(e) {}
+  loadEvents();
 }
 async function doLink() {
   const code = document.getElementById('pCode').value.trim();
@@ -290,18 +389,35 @@ async function doUnlink() {
 async function addEvent() {
   const title = document.getElementById('evTitle').value.trim();
   const date = document.getElementById('evDate').value;
+  const description = document.getElementById('evDesc').value.trim();
   if (!title || !date) return tg.showAlert('Заполни название и дату');
-  await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description:''})});
+  await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('evTitle').value = '';
   document.getElementById('evDate').value = '';
+  document.getElementById('evDesc').value = '';
   loadEvents();
 }
-async function loadEvents() {
-  try {
-    const r = await fetch('/api/events?user_id=' + userId);
-    const list = await r.json();
-    document.getElementById('events').innerHTML = list.length ? list.map(e => `<div class="card"><b>${e.title}</b><br>${e.date}</div>`).join('') : '<div class="card">Пока пусто</div>';
-  } catch(e) {}
+function renderCats() {
+  document.getElementById('cats').innerHTML = CATEGORIES.map(c =>
+    `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`
+  ).join('');
+}
+function setCat(cat) {
+  currentCat = cat;
+  renderCats();
+  document.getElementById('dateResult').innerHTML = '';
+  closeFilters();
+}
+function openFilters() { document.getElementById('filtersModal').classList.add('show'); }
+function closeFilters(e) {
+  if (!e || e.target.id === 'filtersModal') document.getElementById('filtersModal').classList.remove('show');
+}
+function randomDate() {
+  let list = currentCat === 'all' ? DATE_IDEAS : DATE_IDEAS.filter(d => d.cat === currentCat);
+  if (!list.length) return;
+  const idea = list[Math.floor(Math.random() * list.length)];
+  document.getElementById('dateResult').innerHTML = `<div class="date-card"><div class="date-title">${idea.title}</div><div class="date-desc">${idea.desc}</div></div>`;
+  tg.HapticFeedback.impactOccurred('light');
 }
 function openMenu(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
 function closeMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
