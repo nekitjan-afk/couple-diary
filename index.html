@@ -391,11 +391,20 @@ async function addEvent() {
   const date = document.getElementById('evDate').value;
   const description = document.getElementById('evDesc').value.trim();
   if (!title || !date) return tg.showAlert('Заполни название и дату');
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const eventDate = new Date(date);
+  if (eventDate < today) {
+    return tg.showAlert('Нельзя добавлять события задним числом');
+  }
+
   await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('evTitle').value = '';
   document.getElementById('evDate').value = '';
   document.getElementById('evDesc').value = '';
   loadEvents();
+  tg.HapticFeedback.notificationOccurred('success');
 }
 function renderCats() {
   document.getElementById('cats').innerHTML = CATEGORIES.map(c =>
