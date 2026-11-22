@@ -1,166 +1,170 @@
+import aiosqlite
 import os
-import asyncio
-from aiohttp import web
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
-from dotenv import load_dotenv
-import database as db
+from datetime import datetime
 
-load_dotenv()
+DB_PATH = os.getenv("DB_PATH", "couple.db")
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:8080")
-PORT = int(os.getenv("PORT", 8080))
-
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
-    ])
-    await message.answer(
-        "Добро пожаловать в Couple Dairy!\n\n"
-        "Это ваше общее приложение — календарь.\n"
-        "Нажми кнопку ниже.",
-        reply_markup=kb
-    )
-
-# ========== WEB SERVER ==========
-async def handle_index(request):
-    return web.FileResponse("index.html")
-
-async def api_me(request):
-    user_id = int(request.query.get("user_id", 0))
-    name = request.query.get("name")
-    username = request.query.get("username")
-    photo = request.query.get("photo")
-    
-    await db.get_or_create_user(user_id, name, username, photo)
-    partner = await db.get_partner_info(user_id)
-    
-    return web.json_response({
-        "user_id": user_id,
-        "partner": {
-            "id": partner[0],
-            "name": partner[1],
-            "username": partner[2],
-            "photo": partner[3]
-        } if partner else None
-    })
-
-async def api_link(request):
-    try:
-        data = await request.json()
-        user_id = data.get("user_id")
-        code = str(data.get("code", "")).strip()
+async def init_db():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                partner_id INTEGER,
+                name TEXT,
+                username TEXT,
+                photo_url TEXT,
+                link_code TEXT UNIQUE,
+                created_at TEXT
+            )
+        """)
         
-        if not code:
-            return web.json_response({"ok": False, "error": "Введи код"})
-        
-        partner_row = await db.get_user_by_code(code)
-        if not partner_row:
-            return web.json_response({"ok": False, "error": "Код не найден"})
-        
-        partner_id = partner_row[0]
-        if partner_id == user_id:
-            return web.json_response({"ok": False, "error": "Нельзя привязать себя"})
-        
-        success, msg = await db.link_partners(user_id, partner_id)
-        if not success:
-            return web.json_response({"ok": False, "error": msg})
-        
-        return web.json_response({
-            "ok": True,
-            "partner": {
-                "id": partner_id,
-                "name": partner_row[1],
-                "username": partner_row[2],
-                "photo": partner_row[3]
-            }
-        })
-    except Exception as e:
-        return web.json_response({"ok": False, "error": f"Сервер: {str(e)}"})
-
-async def api_unlink(request):
-    try:
-        data = await request.json()
-        user_id = data.get("user_id")
-        success, msg = await db.unlink_partners(user_id)
-        return web.json_response({"ok": success, "message": msg})
-    except Exception as e:
-        return web.json_response({"ok": False, "error": str(e)})
-
-async def api_add_event(request):
-    data = await request.json()
-    user_id = data.get("user_id")
-    title = data.get("title")
-    date = data.get("date")
-    description = data.get("description", "")
-    await db.add_event(user_id, title, date, description)
-    return web.json_response({"ok": True})
-
-async def api_get_events(request):
-    user_id = int(request.query.get("user_id", 0))
-    events = await db.get_events(user_id)
-    return web.json_response([
-        {"title": e[0], "date": e[1], "description": e[2]} for e in events
-    ])
-
-async def api_add_reminder(request):
-    try:
-        data = await request.json()
-        await db.add_reminder(
-            data.get("title"),
-            data.get("event_date"),
-            data.get("remind_at"),
-            data.get("user_id"),
-            data.get("partner_id"),
-            data.get("target")
-        )
-        return web.json_response({"ok": True})
-    except Exception as e:
-        return web.json_response({"ok": False, "error": str(e)})
-
-async def check_reminders():
-    while True:
+        # Добавляем колонки, если их нет (для старых баз)
         try:
-            reminders = await db.get_due_reminders()
-            for r in reminders:
-                rid, title, uid, pid, target = r
-                text = f"Не забудьте о вашем событии:\n\n<b>{title}</b>"
-                if target in ("me", "both") and uid:
-                    await bot.send_message(uid, text, parse_mode="HTML")
-                if target in ("partner", "both") and pid:
-                    await bot.send_message(pid, text, parse_mode="HTML")
-                await db.mark_reminder_sent(rid)
-        except Exception as e:
-            print("Reminder error:", e)
-        await asyncio.sleep(30)
+            await db.execute("ALTER TABLE users ADD COLUMN username TEXT")
+        except:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN photo_url TEXT")
+        except:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN link_code TEXT")
+        except:
+            pass
+        
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                partner_id INTEGER,
+                title TEXT,
+                date TEXT,
+                description TEXT,
+                created_at TEXT
+            )
+        """)
+        
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_title TEXT,
+                event_date TEXT,
+                remind_at TEXT,
+                user_id INTEGER,
+                partner_id INTEGER,
+                target TEXT,
+                custom_text TEXT,
+                sent INTEGER DEFAULT 0
+            )
+        """)
+        
+        await db.commit()
 
-async def start_web_server():
-    app = web.Application()
-    app.router.add_get("/", handle_index)
-    app.router.add_get("/api/me", api_me)
-    app.router.add_post("/api/link", api_link)
-    app.router.add_post("/api/unlink", api_unlink)
-    app.router.add_post("/api/event", api_add_event)
-    app.router.add_post("/api/reminder", api_add_reminder)
-    app.router.add_get("/api/events", api_get_events)
-    
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
-    await site.start()
-    print(f"Web server started on port {PORT}")
+async def get_or_create_user(user_id: int, name: str = None, username: str = None, photo_url: str = None):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                return row
+        
+        # Создаём нового пользователя с кодом
+        code = str(user_id)[-6:].zfill(6)
+        now = datetime.now().isoformat()
+        await db.execute("""
+            INSERT INTO users (user_id, name, username, photo_url, link_code, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (user_id, name, username, photo_url, code, now))
+        await db.commit()
+        return (user_id, None, name, username, photo_url, code, now)
 
-async def main():
-    await db.init_db()
-    await start_web_server()
-    asyncio.create_task(check_reminders())
-    await dp.start_polling(bot)
+async def get_user_by_code(code: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT user_id, name, username, photo_url FROM users WHERE link_code = ?", (code,)) as cursor:
+            return await cursor.fetchone()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def link_partners(user_id: int, partner_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Убеждаемся, что оба пользователя существуют
+        await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
+        await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (partner_id,))
+        
+        # Проверяем, что у обоих нет партнёра
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
+            row = await c.fetchone()
+            if row and row[0]:
+                return False, "У тебя уже есть партнёр"
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (partner_id,)) as c:
+            row = await c.fetchone()
+            if row and row[0]:
+                return False, "У этого пользователя уже есть партнёр"
+        
+        # Привязываем взаимно
+        await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (partner_id, user_id))
+        await db.execute("UPDATE users SET partner_id = ? WHERE user_id = ?", (user_id, partner_id))
+        await db.commit()
+        return True, "Успешно"
+
+async def unlink_partners(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Находим партнёра
+        async with db.execute("SELECT partner_id FROM users WHERE user_id = ?", (user_id,)) as c:
+            row = await c.fetchone()
+            if not row or not row[0]:
+                return False, "Партнёр не привязан"
+            partner_id = row[0]
+        
+        # Отвязываем обоих
+        await db.execute("UPDATE users SET partner_id = NULL WHERE user_id = ?", (user_id,))
+        await db.execute("UPDATE users SET partner_id = NULL WHERE user_id = ?", (partner_id,))
+        await db.commit()
+        return True, "Отвязано"
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT u2.user_id, u2.name, u2.username, u2.photo_url
+            FROM users u1
+            JOIN users u2 ON u1.partner_id = u2.user_id
+            WHERE u1.user_id = ?
+        """, (user_id,)) as cursor:
+            return await cursor.fetchone()
+
+async def add_event(user_id: int, title: str, date: str, description: str = ""):
+    partner = await get_partner_info(user_id)
+    partner_id = partner[0] if partner else None
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            INSERT INTO events (user_id, partner_id, title, date, description, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (user_id, partner_id, title, date, description, datetime.now().isoformat()))
+        await db.commit()
+    return True
+
+async def add_reminder(event_title: str, event_date: str, remind_at: str, user_id: int, partner_id: int, target: str, text: str = ""):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            INSERT INTO reminders (event_title, event_date, remind_at, user_id, partner_id, target, custom_text)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (event_title, event_date, remind_at, user_id, partner_id, target, text))
+        await db.commit()
+    return True
+
+async def get_due_reminders():
+    now = datetime.now().isoformat()
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT id, event_title, user_id, partner_id, target, custom_text 
+            FROM reminders 
+            WHERE remind_at <= ? AND sent = 0
+        """, (now,)) as cursor:
+            return await cursor.fetchall()
+
+async def mark_reminder_sent(reminder_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE reminders SET sent = 1 WHERE id = ?", (reminder_id,))
+        await db.commit()
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT title, date, description FROM events
+            WHERE user_id = ? OR partner_id = ?
+            ORDER BY date
+        """, (user_id, user_id)) as cursor:
+            return await cursor.fetchall()
