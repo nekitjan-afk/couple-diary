@@ -137,23 +137,18 @@ button{background:#2481cc;font-weight:600}
     <button onclick="saveReminder()" style="margin-top:8px">Установить напоминание</button>
   </div>
 </div>
-<div class="modal" id="remindModal" onclick="closeRemind(event)">
+
+<div class="modal" id="planModal" onclick="closePlan(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <div class="modal-title">Напоминание</div>
-      <div class="close-modal" onclick="closeRemind()">×</div>
+      <div class="modal-title" id="planTitle">Запланировать</div>
+      <div class="close-modal" onclick="closePlan()">×</div>
     </div>
-    <div style="margin-bottom:8px;opacity:0.8">Когда напомнить:</div>
-    <input type="datetime-local" id="remindAt">
-    <div style="margin:12px 0 8px;opacity:0.8">Кому:</div>
-    <select id="remindTarget" style="width:100%;padding:14px;border-radius:12px;background:#1c1c1e;color:#fff;border:none">
-      <option value="me">Только мне</option>
-      <option value="partner">Только партнёру</option>
-      <option value="both">Нам обоим</option>
-    </select>
-    <button onclick="saveReminder()" style="margin-top:12px">Сохранить напоминание</button>
+    <input id="planEvTitle" placeholder="Название">
+    <textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea>
+    <button onclick="addEventFromPlan()">Запланировать событие</button>
   </div>
-</div><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="planTitle">Запланировать</div><div class="close-modal" onclick="closePlan()">×</div></div><input id="planEvTitle" placeholder="Название"><textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea><button onclick="addEventFromPlan()">Запланировать событие</button></div></div>
+</div>
 
 <script>
 const tg = window.Telegram.WebApp;
@@ -227,20 +222,20 @@ function renderCalendar() {
 function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
 function onDateClick(date) {
   const events = allEvents.filter(e => e.date === date);
+  document.getElementById('eventsModalTitle').textContent = 'События на ' + date;
+  const list = document.getElementById('eventsList');
+  let html = '';
   if (events.length) {
-    const list = document.getElementById('eventsList');
-    document.getElementById('eventsModalTitle').textContent = 'События на ' + date;
-    list.innerHTML = events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('') +
-      `<button onclick="openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить ещё событие</button>`;
-    document.getElementById('eventsModal').classList.add('show');
-    return;
+    html = events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('');
+  } else {
+    html = '<div class="card">Событий нет</div>';
   }
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  if (new Date(date) < today) {
-    return tg.showAlert('Нельзя планировать события задним числом');
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (new Date(date) >= today) {
+    html += `<button onclick="openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить событие</button>`;
   }
-  openPlanForDate(date);
+  list.innerHTML = html;
+  document.getElementById('eventsModal').classList.add('show');
 }
 function openPlanForDate(date) {
   window.selectedDate = date;
@@ -363,8 +358,10 @@ function setDate() {
   if (d) { localStorage.setItem('relStart', d); updateHome(); }
 }
 async function init() {
-  document.getElementById('planModal')?.classList.remove('show');
-  document.getElementById('remindModal')?.classList.remove('show');
+  ['planModal','remindModal','eventsModal','eventDetailModal','filtersModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
   document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
   renderFooter();
   updateHome();
