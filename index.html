@@ -320,11 +320,23 @@ async function addEventFromPlan() {
   const exists = allEvents.some(e => e.date === date && e.title.toLowerCase() === title.toLowerCase());
   if (exists) return tg.showAlert('Событие с таким названием уже есть на эту дату');
 
-  await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
+  try {
+    const r = await fetch('/api/event', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:userId, title, date, description})
+    });
+    const d = await r.json();
+    if (!d.ok && d.error) return tg.showAlert(d.error);
+  } catch(e) {
+    return tg.showAlert('Ошибка сохранения');
+  }
+
   document.getElementById('planEvTitle').value = '';
   document.getElementById('planEvDesc').value = '';
   closePlan();
-  loadEvents();
+  await loadEvents();
+  onDateClick(date);
   tg.HapticFeedback.notificationOccurred('success');
 }
 function renderFooter() {
