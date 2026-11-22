@@ -150,12 +150,12 @@ async def add_reminder(event_title: str, event_date: str, remind_at: str, user_i
     return True
 
 async def get_due_reminders():
-    now = datetime.now().isoformat()
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
             SELECT id, event_title, user_id, partner_id, target, custom_text 
             FROM reminders 
-            WHERE remind_at <= ? AND sent = 0
+            WHERE substr(remind_at,1,16) <= ? AND sent = 0
         """, (now,)) as cursor:
             return await cursor.fetchall()
 
