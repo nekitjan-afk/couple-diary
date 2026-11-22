@@ -137,7 +137,17 @@ button{background:#2481cc;font-weight:600}
   </div>
 </div>
 
-<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)">
+<div class="modal" id="planModal" onclick="closePlan(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="planTitle">Запланировать</div>
+      <div class="close-modal" onclick="closePlan()">×</div>
+    </div>
+    <input id="planEvTitle" placeholder="Название">
+    <textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea>
+    <button onclick="addEventFromPlan()">Запланировать событие</button>
+  </div>
+</div>
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-title" id="detailTitle"></div>
@@ -262,8 +272,18 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
-function selectDate(date) {
-  document.getElementById('evDate').value = date;
+function onDateClick(date) {
+  const event = allEvents.find(e => e.date === date);
+  if (event) {
+    document.getElementById('detailTitle').textContent = event.title;
+    document.getElementById('detailDate').textContent = event.date;
+    document.getElementById('detailDesc').textContent = event.description || 'Без описания';
+    document.getElementById('eventDetailModal').classList.add('show');
+  } else {
+    document.getElementById('evDate').value = date;
+    document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
+    document.getElementById('planModal').classList.add('show');
+  }
 }
 
 async function loadEvents() {
@@ -297,6 +317,23 @@ function showEventDetail(i) {
   document.getElementById('eventDetailModal').classList.add('show');
 }
 function closeEventDetail(e) {
+  if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show');
+}
+function closePlan(e) {
+  if (!e || e.target.id === 'planModal') document.getElementById('planModal').classList.remove('show');
+}
+async function addEventFromPlan() {
+  const title = document.getElementById('planEvTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  const description = document.getElementById('planEvDesc').value.trim();
+  if (!title) return tg.showAlert('Введи название');
+  await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
+  document.getElementById('planEvTitle').value = '';
+  document.getElementById('planEvDesc').value = '';
+  closePlan();
+  loadEvents();
+  tg.HapticFeedback.notificationOccurred('success');
+}
   if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show');
 }
 
