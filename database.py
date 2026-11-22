@@ -128,7 +128,13 @@ async def add_reminder(event_title: str, event_date: str, remind_at: str, user_i
     return True
 
 async def get_due_reminders():
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    from datetime import datetime, timezone, timedelta
+    # Сервер в UTC, пользователь в GMT+3
+    now_utc = datetime.now(timezone.utc)
+    now_local = now_utc + timedelta(hours=3)
+    now_str = now_local.strftime("%Y-%m-%dT%H:%M")
+    print(f"Now local (GMT+3): {now_str}")
+    
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
             SELECT id, event_title, user_id, partner_id, target, custom_text, remind_at
@@ -137,7 +143,8 @@ async def get_due_reminders():
         due = []
         for r in rows:
             remind_at = (r["remind_at"] or "")[:16].replace(" ", "T")
-            if remind_at and remind_at <= now:
+            print(f"Check: {remind_at} <= {now_str}")
+            if remind_at and remind_at <= now_str:
                 due.append((r["id"], r["event_title"], r["user_id"], r["partner_id"], r["target"], r["custom_text"]))
         return due
 
