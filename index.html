@@ -28,31 +28,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 input,button,textarea{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:none;font-size:16px;background:#1c1c1e;color:#fff}
 button{background:#2481cc;font-weight:600}
 .card{background:#1c1c1e;padding:16px;border-radius:14px;margin:10px 0;cursor:pointer}
-.code-box{background:#1c1c1e;padding:20px;border-radius:14px;text-align:center;margin:16px 0}
-.code{font-size:28px;font-weight:700;letter-spacing:4px;margin:8px 0}
-.date-card{background:#1c1c1e;padding:20px;border-radius:16px;margin:16px 0;text-align:center}
-.date-title{font-size:20px;font-weight:700;margin-bottom:8px}
-.date-desc{opacity:0.8;font-size:15px;line-height:1.4}
-.cats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.cat{padding:10px 16px;border-radius:20px;background:#2a2a2e;font-size:15px;cursor:pointer}
-.cat.active{background:#2481cc}
+.calendar{background:#1c1c1e;border-radius:16px;padding:12px;margin-bottom:16px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-day{padding:10px 0;border-radius:10px;font-size:14px;position:relative;cursor:pointer}
+.cal-day.other{opacity:0.3}
+.cal-day.today{background:#2481cc}
+.cal-day.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#ff6b6b;border-radius:50%}
+.weekday{font-size:12px;opacity:0.6;padding:6px 0}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:none;align-items:flex-end;justify-content:center}
 .modal.show{display:flex}
 .modal-content{background:#1c1c1e;width:100%;border-radius:20px 20px 0 0;padding:20px;max-height:80vh;overflow-y:auto}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .modal-title{font-size:18px;font-weight:600}
 .close-modal{font-size:28px;cursor:pointer}
-.calendar{background:#1c1c1e;border-radius:16px;padding:12px;margin-bottom:16px}
-.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:600}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.cal-day{padding:10px 0;border-radius:10px;font-size:14px;position:relative;cursor:pointer}
-.cal-day .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap;z-index:10;margin-bottom:6px;pointer-events:none}
-.cal-day:hover .tooltip{display:block}
-.cal-day.other{opacity:0.3}
-.cal-day.today{background:#2481cc}
-.cal-day.has-event{position:relative}
-.cal-day.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#ff6b6b;border-radius:50%}
-.weekday{font-size:12px;opacity:0.6;padding:6px 0}
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.cat{padding:10px 16px;border-radius:20px;background:#2a2a2e;font-size:15px;cursor:pointer}
+.cat.active{background:#2481cc}
+.date-card{background:#1c1c1e;padding:20px;border-radius:16px;margin:16px 0;text-align:center}
 </style>
 </head>
 <body>
@@ -65,12 +58,10 @@ button{background:#2481cc;font-weight:600}
   <div class="menu-item" onclick="show('link')">🔗 Привязать партнёра</div>
   <div class="sidebar-footer" id="footer">Загрузка...</div>
 </div>
-
 <div class="header">
   <div class="burger" onclick="openMenu()">☰</div>
   <div class="header-title" id="title">Главная</div>
 </div>
-
 <div class="content">
   <div id="home" class="section active">
     <div class="days">
@@ -79,7 +70,6 @@ button{background:#2481cc;font-weight:600}
     </div>
     <div id="dateBtn"></div>
   </div>
-
   <div id="calendar" class="section">
     <div class="calendar">
       <div class="cal-header">
@@ -90,26 +80,24 @@ button{background:#2481cc;font-weight:600}
       <div class="cal-grid" id="calWeekdays"></div>
       <div class="cal-grid" id="calDays"></div>
     </div>
-    <button onclick="openEventsList()">Список событий</button>
     <h3 style="margin:16px 0 8px">Добавить событие</h3>
     <input id="evTitle" placeholder="Название">
     <input id="evDate" type="date">
     <textarea id="evDesc" placeholder="Описание" rows="2"></textarea>
     <button onclick="addEvent()">Добавить</button>
+    <button onclick="openEventsList()" style="background:#2a2a2e;margin-top:8px;">Список событий</button>
   </div>
-
   <div id="dates" class="section">
     <h2>Генератор свиданий</h2>
     <button onclick="openFilters()" style="background:#2a2a2e;">Фильтры</button>
     <button onclick="randomDate()">🎲 Случайное свидание</button>
     <div id="dateResult"></div>
   </div>
-
   <div id="link" class="section">
     <h2>Привязать партнёра</h2>
-    <div class="code-box">
+    <div style="background:#1c1c1e;padding:20px;border-radius:14px;text-align:center;margin:16px 0">
       <div>Твой код:</div>
-      <div class="code" id="myCode">------</div>
+      <div style="font-size:28px;font-weight:700;letter-spacing:4px;margin:8px 0" id="myCode">------</div>
     </div>
     <input id="pCode" placeholder="Код партнёра">
     <button id="linkBtn" onclick="doLink()">Привязать</button>
@@ -118,52 +106,14 @@ button{background:#2481cc;font-weight:600}
   </div>
 </div>
 
-<div class="modal" id="filtersModal" onclick="closeFilters(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">Фильтры</div>
-      <div class="close-modal" onclick="closeFilters()">×</div>
-    </div>
-    <div class="cats" id="cats"></div>
-    <button onclick="closeFilters()">Готово</button>
-  </div>
-</div>
-
-<div class="modal" id="eventsModal" onclick="closeEvents(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">Список событий</div>
-      <div class="close-modal" onclick="closeEvents()">×</div>
-    </div>
-    <div id="eventsList"></div>
-  </div>
-</div>
-
-<div class="modal" id="planModal" onclick="closePlan(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title" id="planTitle">Запланировать</div>
-      <div class="close-modal" onclick="closePlan()">×</div>
-    </div>
-    <input id="planEvTitle" placeholder="Название">
-    <textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea>
-    <button onclick="addEventFromPlan()">Запланировать событие</button>
-  </div>
-</div>
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title" id="detailTitle"></div>
-      <div class="close-modal" onclick="closeEventDetail()">×</div>
-    </div>
-    <div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div>
-    <div id="detailDesc"></div>
-  </div>
-</div>
+<div class="modal" id="filtersModal" onclick="closeFilters(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
+<div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Список событий</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
+<div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="detailTitle"></div><div class="close-modal" onclick="closeEventDetail()">×</div></div><div id="detailDate" style="opacity:0.7;margin-bottom:12px"></div><div id="detailDesc"></div></div></div>
+<div class="modal" id="planModal" onclick="closePlan(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="planTitle">Запланировать</div><div class="close-modal" onclick="closePlan()">×</div></div><input id="planEvTitle" placeholder="Название"><textarea id="planEvDesc" placeholder="Описание" rows="2"></textarea><button onclick="addEventFromPlan()">Запланировать событие</button></div></div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
-
 const user = tg.initDataUnsafe?.user || {};
 const userId = user.id || 0;
 let partner = null;
@@ -175,52 +125,15 @@ const DATE_IDEAS = [
   {cat:'романтика', title:'Ужин при свечах', desc:'Приготовить что-то простое вместе и поужинать при свечах дома'},
   {cat:'романтика', title:'Пикник на закате', desc:'Взять плед, фрукты и напитки, найти красивое место на закате'},
   {cat:'романтика', title:'Прогулка под звёздами', desc:'Выйти вечером в парк или на набережную'},
-  {cat:'романтика', title:'Танец дома', desc:'Включить любимую музыку и потанцевать вдвоём'},
-  {cat:'романтика', title:'Письма друг другу', desc:'Написать короткие письма о том, что нравится в партнёре'},
   {cat:'кино', title:'Кино дома', desc:'Выбрать фильм и сделать попкорн'},
   {cat:'кино', title:'Сходить в кино', desc:'Выбрать премьеру и сходить в кинотеатр'},
-  {cat:'кино', title:'Марафон сериала', desc:'Выбрать сериал и посмотреть несколько серий подряд'},
-  {cat:'кино', title:'Фильм на проекторе', desc:'Если есть проектор — устроить кинотеатр дома'},
   {cat:'актив', title:'Прогулка на велосипедах', desc:'Покататься по городу или парку'},
   {cat:'актив', title:'Боулинг', desc:'Сходить поиграть в боулинг'},
-  {cat:'актив', title:'Каток', desc:'Покататься на коньках'},
-  {cat:'актив', title:'Настольный теннис', desc:'Поиграть в пинг-понг'},
-  {cat:'актив', title:'Прогулка в лесу/парке', desc:'Долгая прогулка на природе'},
   {cat:'дом', title:'Готовим вместе', desc:'Выбрать рецепт и приготовить ужин'},
   {cat:'дом', title:'Настольные игры', desc:'Вечер настолок'},
-  {cat:'дом', title:'Спа-вечер дома', desc:'Маски, массаж, расслабляющая музыка'},
-  {cat:'дом', title:'Уборка под музыку', desc:'Вместе навести порядок и потом отдохнуть'},
-  {cat:'дом', title:'Завтрак в постель', desc:'Приготовить завтрак и принести в постель'},
   {cat:'бюджет', title:'Кофе и прогулка', desc:'Кофе навынос и прогулка по городу'},
-  {cat:'бюджет', title:'Фотосессия', desc:'Поснимать друг друга на телефон'},
-  {cat:'бюджет', title:'Книжный магазин', desc:'Походить по книжному и выбрать что-нибудь'},
-  {cat:'бюджет', title:'Закат с крыши/холма', desc:'Найти место с видом и посидеть'},
-  {cat:'бюджет', title:'Пикник в парке', desc:'Простой пикник с тем, что есть дома'},
-  {cat:'сюрприз', title:'Маленький подарок', desc:'Купить что-то небольшое просто так'},
-  {cat:'сюрприз', title:'Записка в кармане', desc:'Положить милую записку партнёру'},
   {cat:'город', title:'Новый район', desc:'Погулять в районе, где ещё не были'},
-  {cat:'город', title:'Музей или выставка', desc:'Сходить на любую выставку'},
-  {cat:'город', title:'Смотровая площадка', desc:'Найти место с красивым видом на город'},
-  {cat:'еда', title:'Завтрак вне дома', desc:'Сходить на завтрак или бранч'},
-  {cat:'еда', title:'Новая кухня', desc:'Попробовать кухню, которую ещё не ели'},
-  {cat:'еда', title:'Десерты', desc:'Сходить в кондитерскую'},
-  {cat:'еда', title:'Уличная еда', desc:'Попробовать что-то с фуд-корта'},
-  {cat:'творчество', title:'Рисуем вместе', desc:'Взять бумагу и краски/карандаши'},
-  {cat:'творчество', title:'Плейлист', desc:'Составить общий плейлист'},
-  {cat:'творчество', title:'Коллаж', desc:'Сделать коллаж из фотографий'},
-  {cat:'вечер', title:'Настолки + вино', desc:'Игры и напитки дома'},
-  {cat:'вечер', title:'Караоке дома', desc:'Петь в телефоне или через приложение'},
-  {cat:'вечер', title:'Настольные ролевые', desc:'Попробовать простую настольную ролёвку'},
-  {cat:'природа', title:'Поход выходного дня', desc:'Короткий поход за город'},
-  {cat:'природа', title:'Озеро или река', desc:'Поехать к воде'},
-  {cat:'романтика', title:'Массаж друг другу', desc:'Простой массаж дома'},
-  {cat:'романтика', title:'Общие планы', desc:'Посидеть и попланировать ближайший месяц'},
-  {cat:'кино', title:'Старый фильм', desc:'Посмотреть классику'},
-  {cat:'дом', title:'Перестановка', desc:'Немного изменить обстановку'},
-  {cat:'бюджет', title:'Настольный футбол', desc:'Если есть рядом'},
-  {cat:'город', title:'Ночная прогулка', desc:'Погулять по центру вечером'},
-  {cat:'еда', title:'Готовим десерт', desc:'Испечь что-нибудь простое'},
-  {cat:'сюрприз', title:'Сюрприз-завтрак', desc:'Организовать неожиданный завтрак'}
+  {cat:'еда', title:'Завтрак вне дома', desc:'Сходить на завтрак или бранч'}
 ];
 
 const CATEGORIES = [
@@ -231,48 +144,42 @@ const CATEGORIES = [
   {id:'еда', name:'Еда'},
   {id:'актив', name:'Активный отдых'},
   {id:'город', name:'По городу'},
-  {id:'бюджет', name:'Бюджетные'},
-  {id:'сюрприз', name:'Сюрприз'},
-  {id:'творчество', name:'Творчество'},
-  {id:'вечер', name:'Вечерние'},
-  {id:'природа', name:'На природе'}
+  {id:'бюджет', name:'Бюджетные'}
 ];
+
+function openMenu(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function show(id){
+  closeMenu();
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('title').textContent = {home:'Главная',calendar:'Календарь',dates:'Свидания',link:'Привязка'}[id]||id;
+  if(id==='calendar') loadEvents();
+  if(id==='home') updateHome();
+}
 
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   document.getElementById('calTitle').textContent = monthNames[month] + ' ' + year;
-
   const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   document.getElementById('calWeekdays').innerHTML = weekdays.map(d => `<div class="weekday">${d}</div>`).join('');
-
   const firstDay = new Date(year, month, 1);
-  let start = firstDay.getDay() || 7;
-  start--;
+  let start = (firstDay.getDay() || 7) - 1;
   const daysInMonth = new Date(year, month+1, 0).getDate();
-  const prevDays = new Date(year, month, 0).getDate();
-
   let html = '';
-  for (let i = start; i > 0; i--) {
-    html += `<div class="cal-day other">${prevDays - i + 1}</div>`;
-  }
+  for (let i = 0; i < start; i++) html += `<div class="cal-day other"></div>`;
   const today = new Date();
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const hasEvent = allEvents.find(e => e.date === dateStr);
-    const tooltip = hasEvent ? hasEvent.title : 'Событий не запланировано';
-    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}<div class="tooltip">${tooltip}</div></div>`;
+    const hasEvent = allEvents.some(e => e.date === dateStr);
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}</div>`;
   }
   document.getElementById('calDays').innerHTML = html;
 }
-
-function changeMonth(dir) {
-  currentDate.setMonth(currentDate.getMonth() + dir);
-  renderCalendar();
-}
-
+function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
 function onDateClick(date) {
   const event = allEvents.find(e => e.date === date);
   if (event) {
@@ -286,7 +193,6 @@ function onDateClick(date) {
     document.getElementById('planModal').classList.add('show');
   }
 }
-
 async function loadEvents() {
   try {
     const r = await fetch('/api/events?user_id=' + userId);
@@ -294,21 +200,12 @@ async function loadEvents() {
     renderCalendar();
   } catch(e) {}
 }
-
 function openEventsList() {
   const list = document.getElementById('eventsList');
-  if (!allEvents.length) {
-    list.innerHTML = '<div class="card">Пока нет событий</div>';
-  } else {
-    list.innerHTML = allEvents.map((e,i) => 
-      `<div class="card" onclick="showEventDetail(${i})"><b>${e.title}</b><br><small>${e.date}</small></div>`
-    ).join('');
-  }
+  list.innerHTML = allEvents.length ? allEvents.map((e,i) => `<div class="card" onclick="showEventDetail(${i})"><b>${e.title}</b><br><small>${e.date}</small></div>`).join('') : '<div class="card">Пока нет событий</div>';
   document.getElementById('eventsModal').classList.add('show');
 }
-function closeEvents(e) {
-  if (!e || e.target.id === 'eventsModal') document.getElementById('eventsModal').classList.remove('show');
-}
+function closeEvents(e) { if (!e || e.target.id === 'eventsModal') document.getElementById('eventsModal').classList.remove('show'); }
 function showEventDetail(i) {
   const e = allEvents[i];
   document.getElementById('detailTitle').textContent = e.title;
@@ -317,12 +214,8 @@ function showEventDetail(i) {
   closeEvents();
   document.getElementById('eventDetailModal').classList.add('show');
 }
-function closeEventDetail(e) {
-  if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show');
-}
-function closePlan(e) {
-  if (!e || e.target.id === 'planModal') document.getElementById('planModal').classList.remove('show');
-}
+function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show'); }
+function closePlan(e) { if (!e || e.target.id === 'planModal') document.getElementById('planModal').classList.remove('show'); }
 async function addEventFromPlan() {
   const title = document.getElementById('planEvTitle').value.trim();
   const date = document.getElementById('evDate').value;
@@ -333,27 +226,13 @@ async function addEventFromPlan() {
   document.getElementById('planEvDesc').value = '';
   closePlan();
   loadEvents();
-  tg.HapticFeedback.notificationOccurred('success');
 }
-  if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show');
-}
-
-// (остальной код дат, привязки и т.д. остаётся как был)
-document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
-renderFooter();
-updateHome();
-renderCats();
-renderCalendar();
-
 function renderFooter() {
   const f = document.getElementById('footer');
   const ava = user.photo_url ? `<img src="${user.photo_url}">` : (user.first_name?.[0] || '?');
-  if (partner) {
-    const pAva = partner.photo ? `<img src="${partner.photo}">` : (partner.name?.[0] || '?');
-    f.innerHTML = `<div class="avatar">${ava}</div><div class="avatar" style="margin-left:-12px;border:2px solid #1c1c1e">${pAva}</div>`;
-  } else {
-    f.innerHTML = `<div class="avatar">${ava}</div><div><b>${user.first_name || 'Пользователь'}</b><br><small style="opacity:.6">${user.username ? '@'+user.username : ''}</small></div>`;
-  }
+  f.innerHTML = partner 
+    ? `<div class="avatar">${ava}</div><div class="avatar" style="margin-left:-12px;border:2px solid #1c1c1e">${partner.photo?`<img src="${partner.photo}">`:(partner.name?.[0]||'?')}</div>`
+    : `<div class="avatar">${ava}</div><div><b>${user.first_name || 'Пользователь'}</b><br><small style="opacity:.6">${user.username ? '@'+user.username : ''}</small></div>`;
 }
 function updateHome() {
   if (!partner) {
@@ -379,6 +258,11 @@ function setDate() {
   if (d) { localStorage.setItem('relStart', d); updateHome(); }
 }
 async function init() {
+  document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
+  renderFooter();
+  updateHome();
+  renderCats();
+  renderCalendar();
   if (!userId) return;
   try {
     const r = await fetch(`/api/me?user_id=${userId}&name=${encodeURIComponent(user.first_name||'')}&username=${user.username||''}&photo=${encodeURIComponent(user.photo_url||'')}`);
@@ -408,7 +292,6 @@ async function doLink() {
     document.getElementById('unlinkBtn').style.display = 'block';
     document.getElementById('pCode').style.display = 'none';
     document.getElementById('linkBtn').style.display = 'none';
-    tg.HapticFeedback.notificationOccurred('success');
   } catch(e) { tg.showAlert('Ошибка: ' + e.message); }
 }
 async function doUnlink() {
@@ -421,60 +304,32 @@ async function doUnlink() {
     document.getElementById('unlinkBtn').style.display = 'none';
     document.getElementById('pCode').style.display = 'block';
     document.getElementById('linkBtn').style.display = 'block';
-    tg.showAlert('Отвязано');
-  } else tg.showAlert(d.error || 'Ошибка');
+  }
 }
 async function addEvent() {
   const title = document.getElementById('evTitle').value.trim();
   const date = document.getElementById('evDate').value;
   const description = document.getElementById('evDesc').value.trim();
   if (!title || !date) return tg.showAlert('Заполни название и дату');
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const eventDate = new Date(date);
-  if (eventDate < today) {
-    return tg.showAlert('Нельзя добавлять события задним числом');
-  }
-
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (new Date(date) < today) return tg.showAlert('Нельзя добавлять события задним числом');
   await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('evTitle').value = '';
   document.getElementById('evDate').value = '';
   document.getElementById('evDesc').value = '';
   loadEvents();
-  tg.HapticFeedback.notificationOccurred('success');
 }
 function renderCats() {
-  document.getElementById('cats').innerHTML = CATEGORIES.map(c =>
-    `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`
-  ).join('');
+  document.getElementById('cats').innerHTML = CATEGORIES.map(c => `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`).join('');
 }
-function setCat(cat) {
-  currentCat = cat;
-  renderCats();
-  document.getElementById('dateResult').innerHTML = '';
-  closeFilters();
-}
+function setCat(cat) { currentCat = cat; renderCats(); document.getElementById('dateResult').innerHTML = ''; closeFilters(); }
 function openFilters() { document.getElementById('filtersModal').classList.add('show'); }
-function closeFilters(e) {
-  if (!e || e.target.id === 'filtersModal') document.getElementById('filtersModal').classList.remove('show');
-}
+function closeFilters(e) { if (!e || e.target.id === 'filtersModal') document.getElementById('filtersModal').classList.remove('show'); }
 function randomDate() {
   let list = currentCat === 'all' ? DATE_IDEAS : DATE_IDEAS.filter(d => d.cat === currentCat);
   if (!list.length) return;
   const idea = list[Math.floor(Math.random() * list.length)];
-  document.getElementById('dateResult').innerHTML = `<div class="date-card"><div class="date-title">${idea.title}</div><div class="date-desc">${idea.desc}</div></div>`;
-  tg.HapticFeedback.impactOccurred('light');
-}
-function openMenu(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
-function closeMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
-function show(id){
-  closeMenu();
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('title').textContent = {home:'Главная',calendar:'Календарь',dates:'Свидания',link:'Привязка'}[id];
-  if(id==='calendar') loadEvents();
-  if(id==='home') updateHome();
+  document.getElementById('dateResult').innerHTML = `<div class="date-card"><div style="font-size:20px;font-weight:700;margin-bottom:8px">${idea.title}</div><div style="opacity:0.8">${idea.desc}</div></div>`;
 }
 init();
 </script>
