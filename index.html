@@ -32,6 +32,8 @@ button{background:#2481cc;font-weight:600}
 .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:600}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .cal-day{padding:10px 0;border-radius:10px;font-size:14px;position:relative;cursor:pointer}
+.cal-day .tooltip{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:5px 8px;border-radius:6px;font-size:11px;white-space:nowrap;z-index:30;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.cal-day:hover .tooltip,.cal-day:active .tooltip{display:block}
 .cal-day.other{opacity:0.3}
 .cal-day.today{background:#2481cc}
 .cal-day.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#ff6b6b;border-radius:50%}
@@ -169,8 +171,9 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const hasEvent = allEvents.some(e => e.date === dateStr);
-    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}</div>`;
+    const hasEvent = allEvents.find(e => e.date === dateStr);
+    const tip = hasEvent ? hasEvent.title : 'Событий не запланировано';
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="onDateClick('${dateStr}')">${d}<div class="tooltip">${tip}</div></div>`;
   }
   document.getElementById('calDays').innerHTML = html;
 }
