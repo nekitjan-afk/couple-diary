@@ -185,11 +185,16 @@ function onDateClick(date) {
     document.getElementById('detailDate').textContent = event.date;
     document.getElementById('detailDesc').textContent = event.description || 'Без описания';
     document.getElementById('eventDetailModal').classList.add('show');
-  } else {
-    window.selectedDate = date;
-    document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
-    document.getElementById('planModal').classList.add('show');
+    return;
   }
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if (new Date(date) < today) {
+    return tg.showAlert('Нельзя планировать события задним числом');
+  }
+  window.selectedDate = date;
+  document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
+  document.getElementById('planModal').classList.add('show');
 }
 async function loadEvents() {
   try {
