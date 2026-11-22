@@ -126,23 +126,28 @@ async def api_add_reminder(request):
         return web.json_response({"ok": False, "error": str(e)})
 
 async def check_reminders():
+    print("Reminder checker started")
     while True:
         try:
             reminders = await db.get_due_reminders()
+            if reminders:
+                print(f"Found {len(reminders)} due reminders")
             for r in reminders:
                 rid, title, uid, pid, target, custom = r
                 text = (custom or "Не забудьте о вашем событии") + f"\n\n<b>{title}</b>"
+                print(f"Sending reminder {rid} to {uid}/{pid} target={target}")
                 try:
                     if target in ("me", "both") and uid:
-                        await bot.send_message(uid, text, parse_mode="HTML")
+                        await bot.send_message(int(uid), text, parse_mode="HTML")
                     if target in ("partner", "both") and pid:
-                        await bot.send_message(pid, text, parse_mode="HTML")
+                        await bot.send_message(int(pid), text, parse_mode="HTML")
                     await db.mark_reminder_sent(rid)
+                    print(f"Reminder {rid} sent")
                 except Exception as send_err:
-                    print(f"Send error for {uid}/{pid}: {send_err}")
+                    print(f"Send error: {send_err}")
         except Exception as e:
             print("Reminder check error:", e)
-        await asyncio.sleep(20)
+        await asyncio.sleep(15)
 
 async def start_web_server():
     app = web.Application()
