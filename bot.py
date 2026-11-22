@@ -112,20 +112,20 @@ async def api_get_events(request):
 async def api_add_reminder(request):
     try:
         data = await request.json()
-        print("NEW REMINDER:", data)
-        await db.add_reminder(
+        print(">>> NEW REMINDER DATA:", data)
+        result = await db.add_reminder(
             data.get("title"),
             data.get("event_date"),
             data.get("remind_at"),
-            data.get("user_id"),
+            int(data.get("user_id") or 0),
             data.get("partner_id"),
             data.get("target"),
             data.get("text", "")
         )
-        print("Reminder saved OK")
+        print(">>> Reminder saved, result:", result)
         return web.json_response({"ok": True})
     except Exception as e:
-        print("Reminder save error:", e)
+        print(">>> Reminder SAVE ERROR:", str(e))
         return web.json_response({"ok": False, "error": str(e)})
 
 @dp.message(Command("testremind"))
