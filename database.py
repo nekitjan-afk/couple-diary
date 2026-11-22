@@ -53,6 +53,7 @@ async def init_db():
                 user_id INTEGER,
                 partner_id INTEGER,
                 target TEXT,
+                custom_text TEXT,
                 sent INTEGER DEFAULT 0
             )
         """)
@@ -137,12 +138,12 @@ async def add_event(user_id: int, title: str, date: str, description: str = ""):
         await db.commit()
     return True
 
-async def add_reminder(event_title: str, event_date: str, remind_at: str, user_id: int, partner_id: int, target: str):
+async def add_reminder(event_title: str, event_date: str, remind_at: str, user_id: int, partner_id: int, target: str, text: str = ""):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
-            INSERT INTO reminders (event_title, event_date, remind_at, user_id, partner_id, target)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (event_title, event_date, remind_at, user_id, partner_id, target))
+            INSERT INTO reminders (event_title, event_date, remind_at, user_id, partner_id, target, custom_text)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (event_title, event_date, remind_at, user_id, partner_id, target, text))
         await db.commit()
     return True
 
@@ -150,7 +151,7 @@ async def get_due_reminders():
     now = datetime.now().isoformat()
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
-            SELECT id, event_title, user_id, partner_id, target 
+            SELECT id, event_title, user_id, partner_id, target, custom_text 
             FROM reminders 
             WHERE remind_at <= ? AND sent = 0
         """, (now,)) as cursor:
