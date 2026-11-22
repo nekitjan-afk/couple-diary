@@ -131,15 +131,18 @@ async def check_reminders():
             reminders = await db.get_due_reminders()
             for r in reminders:
                 rid, title, uid, pid, target, custom = r
-                text = custom if custom else f"Не забудьте о вашем событии:\n\n<b>{title}</b>"
-                if target in ("me", "both") and uid:
-                    await bot.send_message(uid, text, parse_mode="HTML")
-                if target in ("partner", "both") and pid:
-                    await bot.send_message(pid, text, parse_mode="HTML")
-                await db.mark_reminder_sent(rid)
+                text = (custom or "Не забудьте о вашем событии") + f"\n\n<b>{title}</b>"
+                try:
+                    if target in ("me", "both") and uid:
+                        await bot.send_message(uid, text, parse_mode="HTML")
+                    if target in ("partner", "both") and pid:
+                        await bot.send_message(pid, text, parse_mode="HTML")
+                    await db.mark_reminder_sent(rid)
+                except Exception as send_err:
+                    print(f"Send error for {uid}/{pid}: {send_err}")
         except Exception as e:
-            print("Reminder error:", e)
-        await asyncio.sleep(30)
+            print("Reminder check error:", e)
+        await asyncio.sleep(20)
 
 async def start_web_server():
     app = web.Application()
