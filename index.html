@@ -205,11 +205,16 @@ function showEventDetailByDate(date, index) {
   const events = allEvents.filter(e => e.date === date);
   const e = events[index];
   if (!e) return;
+  window.currentDayDate = date;
   document.getElementById('detailTitle').textContent = e.title;
   document.getElementById('detailDate').textContent = e.date;
   document.getElementById('detailDesc').textContent = e.description || 'Без описания';
   closeEvents();
   document.getElementById('eventDetailModal').classList.add('show');
+}
+function backToDayList() {
+  closeEventDetail();
+  if (window.currentDayDate) onDateClick(window.currentDayDate);
 }
 async function loadEvents() {
   try {
