@@ -231,9 +231,10 @@ function onDateClick(date) {
   let html = '';
   if (events.length) {
     html = events.map((e, i) => {
+      const safe = (e.title||'').replace(/'/g,"\\'");
       return `<div style="background:#2a2a2e;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
         <div onclick="showEventDetailByDate('${date}',${i})" style="flex:1;font-weight:600">${e.title}</div>
-        <div onclick="if(confirm('Удалить?'))deleteEvent('${date}','${(e.title||'').replace(/'/g,"")}');" style="background:#ff3b30;color:white;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600">Удалить</div>
+        <div onclick="doDelete('${date}','${safe}')" style="color:#ff3b30;font-size:22px;padding:6px 10px">🗑</div>
       </div>`;
     }).join('');
   } else {
@@ -304,6 +305,25 @@ function showEventDetail(i) {
   document.getElementById('eventDetailModal').classList.add('show');
 }
 function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show'); }
+function doDelete(date, title) {
+  if (confirm('Удалить событие "' + title + '"?')) {
+    deleteEvent(date, title);
+  }
+}
+async function deleteEvent(date, title) {
+  try {
+    const r = await fetch('/api/event/delete', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: userId, title: title, date: date})
+    });
+    await loadEvents();
+    onDateClick(date);
+    tg.HapticFeedback.notificationOccurred('success');
+  } catch(e) {
+    tg.showAlert('Ошибка удаления');
+  }
+}
 function deleteCurrentEvent() {
   const title = window.currentEventTitle || document.getElementById('detailTitle').textContent;
   const date = document.getElementById('detailDate').textContent;
