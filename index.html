@@ -229,14 +229,12 @@ function onDateClick(date) {
   const list = document.getElementById('eventsList');
   let html = '';
   if (events.length) {
-    html = '';
-    events.forEach((e, i) => {
-      const safeTitle = (e.title || '').replace(/'/g, "\\'").replace(/"/g, '"');
-      html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-bottom:8px">
-        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1"><b>${e.title}</b></div>
-        <span onclick="confirmDelete('${date}','${safeTitle}')" style="color:#ff3b30;font-size:20px;padding:6px 10px">🗑</span>
+    html = events.map((e, i) => {
+      return `<div style="background:#2a2a2e;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div onclick="showEventDetailByDate('${date}',${i})" style="flex:1;font-weight:600">${e.title}</div>
+        <div onclick="if(confirm('Удалить?'))deleteEvent('${date}','${(e.title||'').replace(/'/g,"")}');" style="background:#ff3b30;color:white;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600">Удалить</div>
       </div>`;
-    });
+    }).join('');
   } else {
     html = '<div class="card">Событий нет</div>';
   }
