@@ -33,7 +33,11 @@ async def cmd_testremind(message: types.Message):
     await message.answer("Тестовое напоминание:\n\n<b>Проверка</b>\nНе забудьте о событии", parse_mode="HTML")
 
 async def handle_index(request):
-    return web.FileResponse("index.html")
+    response = web.FileResponse("index.html")
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 async def api_me(request):
     user_id = int(request.query.get("user_id", 0))
