@@ -259,9 +259,21 @@ function showEventDetailByDate(date, index) {
   const e = events[index];
   if (!e) return;
   window.currentDayDate = date;
+  window.currentEventTitle = e.title;
   document.getElementById('detailTitle').textContent = e.title;
   document.getElementById('detailDate').textContent = e.date;
   document.getElementById('detailDesc').textContent = e.description || 'Без описания';
+  
+  let delBtn = document.getElementById('delEventBtn');
+  if (!delBtn) {
+    delBtn = document.createElement('button');
+    delBtn.id = 'delEventBtn';
+    delBtn.textContent = 'Удалить событие';
+    delBtn.style.cssText = 'background:#ff3b30;margin-top:8px';
+    delBtn.onclick = deleteCurrentEvent;
+    document.querySelector('#eventDetailModal .modal-content').appendChild(delBtn);
+  }
+  
   closeEvents();
   document.getElementById('eventDetailModal').classList.add('show');
 }
@@ -292,6 +304,14 @@ function showEventDetail(i) {
   document.getElementById('eventDetailModal').classList.add('show');
 }
 function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show'); }
+function deleteCurrentEvent() {
+  const title = window.currentEventTitle || document.getElementById('detailTitle').textContent;
+  const date = document.getElementById('detailDate').textContent;
+  if (confirm('Удалить событие "' + title + '"?')) {
+    deleteEvent(date, title);
+    closeEventDetail();
+  }
+}
 function openRemind() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 2);
