@@ -42,6 +42,8 @@ async def init_db():
                 updated_at TEXT
             )
         """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS reminders (
                 id SERIAL PRIMARY KEY,
                 event_title TEXT,
                 event_date TEXT,
