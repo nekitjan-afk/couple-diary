@@ -109,16 +109,12 @@ button{background:#2481cc;font-weight:600}
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header" style="justify-content:space-between;margin-bottom:8px">
       <div onclick="backToDayList()" style="font-size:24px;cursor:pointer;padding:4px 12px 4px 0">←</div>
-      <div style="display:flex;gap:16px;align-items:center">
-        <div onclick="deleteCurrentEvent()" style="color:#ff4444;font-size:22px;cursor:pointer">🗑</div>
-        <div class="close-modal" onclick="closeEventDetail()">×</div>
-      </div>
+      <div class="close-modal" onclick="closeEventDetail()">×</div>
     </div>
     <div class="modal-title" id="detailTitle" style="font-size:20px;margin-bottom:6px"></div>
     <div id="detailDate" style="opacity:0.6;margin-bottom:16px;font-size:15px"></div>
     <div id="detailDesc" style="line-height:1.5;font-size:16px;margin-bottom:16px"></div>
-    <button onclick="openRemind()" style="background:#2a2a2e;margin-bottom:8px">Напомнить</button>
-    <button onclick="deleteCurrentEvent()" style="background:#ff3b30">Удалить событие</button>
+    <button onclick="openRemind()" style="background:#2a2a2e;">Напомнить</button>
   </div>
 </div>
 
@@ -260,21 +256,9 @@ function showEventDetailByDate(date, index) {
   const e = events[index];
   if (!e) return;
   window.currentDayDate = date;
-  window.currentEventTitle = e.title;
   document.getElementById('detailTitle').textContent = e.title;
   document.getElementById('detailDate').textContent = e.date;
   document.getElementById('detailDesc').textContent = e.description || 'Без описания';
-  
-  let delBtn = document.getElementById('delEventBtn');
-  if (!delBtn) {
-    delBtn = document.createElement('button');
-    delBtn.id = 'delEventBtn';
-    delBtn.textContent = 'Удалить событие';
-    delBtn.style.cssText = 'background:#ff3b30;margin-top:8px';
-    delBtn.onclick = deleteCurrentEvent;
-    document.querySelector('#eventDetailModal .modal-content').appendChild(delBtn);
-  }
-  
   closeEvents();
   document.getElementById('eventDetailModal').classList.add('show');
 }
