@@ -109,7 +109,10 @@ button{background:#2481cc;font-weight:600}
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header" style="justify-content:space-between;margin-bottom:8px">
       <div onclick="backToDayList()" style="font-size:24px;cursor:pointer;padding:4px 12px 4px 0">←</div>
-      <div class="close-modal" onclick="closeEventDetail()">×</div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div onclick="deleteCurrentEvent()" style="color:#ff4444;font-size:22px;cursor:pointer">🗑</div>
+        <div class="close-modal" onclick="closeEventDetail()">×</div>
+      </div>
     </div>
     <div class="modal-title" id="detailTitle" style="font-size:20px;margin-bottom:6px"></div>
     <div id="detailDate" style="opacity:0.6;margin-bottom:16px;font-size:15px"></div>
@@ -227,9 +230,9 @@ function onDateClick(date) {
   let html = '';
   if (events.length) {
     html = events.map((e,i) => `
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
-        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1;cursor:pointer"><b>${e.title}</b></div>
-        <div onclick="event.stopPropagation(); confirmDelete('${date}', '${(e.title||'').replace(/'/g,"\\'")}')" style="color:#ff4444;font-size:22px;padding:4px 8px;cursor:pointer">🗑</div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px">
+        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1"><b>${e.title}</b></div>
+        <button onclick="event.stopPropagation(); confirmDelete('${date}', '${(e.title||'').replace(/'/g,"\\'")}')" style="background:#ff4444;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:14px">Удалить</button>
       </div>
     `).join('');
   } else {
