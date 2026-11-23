@@ -226,7 +226,12 @@ function onDateClick(date) {
   const list = document.getElementById('eventsList');
   let html = '';
   if (events.length) {
-    html = events.map((e,i) => `<div class="card" onclick="showEventDetailByDate('${date}', ${i})"><b>${e.title}</b></div>`).join('');
+    html = events.map((e,i) => `
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1"><b>${e.title}</b></div>
+        <div onclick="confirmDelete('${date}', '${e.title.replace(/'/g, "\\'")}')" style="color:#ff4444;font-size:20px;padding:8px;cursor:pointer">🗑</div>
+      </div>
+    `).join('');
   } else {
     html = '<div class="card">Событий нет</div>';
   }
