@@ -117,6 +117,8 @@ async def delete_event(user_id: int, title: str, date: str):
             WHERE (user_id = $1 OR partner_id = $1) AND title = $2 AND date = $3
         """, user_id, title, date)
     return True
+
+async def get_events(user_id: int):
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
             SELECT title, date, description FROM events
