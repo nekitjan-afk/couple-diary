@@ -89,6 +89,7 @@ async def unlink_partners(user_id: int):
         if not row or not row["partner_id"]:
             return False, "Партнёр не привязан"
         partner_id = row["partner_id"]
+        await conn.execute("DELETE FROM events WHERE user_id = $1", partner_id)
         await conn.execute("UPDATE users SET partner_id = NULL WHERE user_id = $1", user_id)
         await conn.execute("UPDATE users SET partner_id = NULL WHERE user_id = $1", partner_id)
         return True, "Отвязано"
