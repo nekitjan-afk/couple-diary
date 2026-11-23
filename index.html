@@ -229,12 +229,14 @@ function onDateClick(date) {
   const list = document.getElementById('eventsList');
   let html = '';
   if (events.length) {
-    html = events.map((e,i) => `
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px">
+    html = '';
+    events.forEach((e, i) => {
+      const safeTitle = (e.title || '').replace(/'/g, "\\'").replace(/"/g, '"');
+      html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-bottom:8px">
         <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1"><b>${e.title}</b></div>
-        <button onclick="event.stopPropagation(); confirmDelete('${date}', '${(e.title||'').replace(/'/g,"\\'")}')" style="background:#ff4444;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:14px">Удалить</button>
-      </div>
-    `).join('');
+        <span onclick="confirmDelete('${date}','${safeTitle}')" style="color:#ff3b30;font-size:20px;padding:6px 10px">🗑</span>
+      </div>`;
+    });
   } else {
     html = '<div class="card">Событий нет</div>';
   }
