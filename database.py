@@ -143,6 +143,21 @@ async def add_reminder(event_title: str, event_date: str, remind_at: str, user_i
         """, event_title, event_date, remind_at, user_id, partner_id, target, text)
     return True
 
+async def set_mood(user_id: int, mood: str):
+    async with pool.acquire() as conn:
+        await conn.execute("""
+            INSERT INTO moods (user_id, mood, updated_at) VALUES ($1, $2, $3)
+            ON CONFLICT (user_id) DO UPDATE SET mood = $2, updated_at = $3
+        """, user_id, mood, datetime.now().isoformat())
+
+async def get_partner_mood(user_id: int):
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT partner_id FROM users WHERE user_id = $1", user_id)
+        if not row or not row["partner_id"]:
+            return None
+        mood_row = await conn.fetchrow("SELECT mood FROM moods WHERE user_id = $1", row["partner_id"])
+        return mood_row["mood"] if mood_row else None
+
 async def cleanup_old_events():
     today = datetime.now().strftime("%Y-%m-%d")
     async with pool.acquire() as conn:
