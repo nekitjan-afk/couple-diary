@@ -227,9 +227,9 @@ function onDateClick(date) {
   let html = '';
   if (events.length) {
     html = events.map((e,i) => `
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center">
-        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1"><b>${e.title}</b></div>
-        <div onclick="confirmDelete('${date}', '${e.title.replace(/'/g, "\\'")}')" style="color:#ff4444;font-size:20px;padding:8px;cursor:pointer">🗑</div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
+        <div onclick="showEventDetailByDate('${date}', ${i})" style="flex:1;cursor:pointer"><b>${e.title}</b></div>
+        <div onclick="event.stopPropagation(); confirmDelete('${date}', '${(e.title||'').replace(/'/g,"\\'")}')" style="color:#ff4444;font-size:22px;padding:4px 8px;cursor:pointer">🗑</div>
       </div>
     `).join('');
   } else {
