@@ -86,7 +86,10 @@ async def api_add_event(request):
     await db.add_event(data.get("user_id"), data.get("title"), data.get("date"), data.get("description", ""))
     return web.json_response({"ok": True})
 
-async def api_get_events(request):
+async def api_delete_event(request):
+    data = await request.json()
+    await db.delete_event(data.get("user_id"), data.get("title"), data.get("date"))
+    return web.json_response({"ok": True})
     user_id = int(request.query.get("user_id", 0))
     events = await db.get_events(user_id)
     return web.json_response([{"title": e[0], "date": e[1], "description": e[2]} for e in events])
