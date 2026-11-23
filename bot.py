@@ -104,6 +104,8 @@ async def api_get_mood(request):
     user_id = int(request.query.get("user_id", 0))
     mood = await db.get_partner_mood(user_id)
     return web.json_response({"mood": mood})
+
+async def api_get_events(request):
     user_id = int(request.query.get("user_id", 0))
     events = await db.get_events(user_id)
     return web.json_response([{"title": e[0], "date": e[1], "description": e[2]} for e in events])
@@ -164,6 +166,8 @@ async def start_web_server():
     app.router.add_post("/api/event", api_add_event)
     app.router.add_post("/api/event/delete", api_delete_event)
     app.router.add_post("/api/reminder", api_add_reminder)
+    app.router.add_post("/api/mood", api_set_mood)
+    app.router.add_get("/api/mood", api_get_mood)
     app.router.add_get("/api/events", api_get_events)
     
     runner = web.AppRunner(app)
