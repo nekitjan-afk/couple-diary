@@ -494,14 +494,6 @@ async function loadPartnerMood() {
   } catch(e) {}
 }
 
-function openRelDate() {
-  const d = prompt('Дата начала отношений (ГГГГ-ММ-ДД):', localStorage.getItem('relStart') || '2024-01-01');
-  if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
-    localStorage.setItem('relStart', d);
-    updateHome();
-  }
-}
-
 function openNearestEvent() {
   const upcoming = allEvents.filter(e => e.date >= new Date().toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
   if (!upcoming.length) return;
