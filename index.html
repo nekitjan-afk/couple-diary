@@ -444,12 +444,13 @@ function updateHome() {
 function openRelDate() {
   const cur = localStorage.getItem('relStart');
   let def = '01.01.2024';
-  if (cur) { const [y,m,d] = cur.split('-'); def = `${d}.${m}.${y}`; }
+  if (cur) { const p = cur.split('-'); if (p.length===3) def = p[2]+'.'+p[1]+'.'+p[0]; }
   const inp = prompt('Дата начала (ДД.ММ.ГГГГ):', def);
   if (!inp) return;
-  const m = inp.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  const m = inp.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (!m) return tg.showAlert('Формат: ДД.ММ.ГГГГ');
-  localStorage.setItem('relStart', `${m[3]}-${m[2]}-${m[1]}`);
+  const iso = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  localStorage.setItem('relStart', iso);
   updateHome();
 }
 
