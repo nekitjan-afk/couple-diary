@@ -66,11 +66,7 @@ button{background:#2481cc;font-weight:600}
 </div>
 <div class="content">
   <div id="home" class="section active">
-    <div class="days">
-      <div class="days-num" id="days">—</div>
-      <div id="daysText">Сначала привяжи партнёра</div>
-    </div>
-    <div id="dateBtn"></div>
+    <div id="homeWidgets"></div>
   </div>
   <div id="calendar" class="section">
     <div class="calendar">
@@ -399,27 +395,58 @@ function renderFooter() {
     : `<div class="avatar">${ava}</div><div><b>${user.first_name || 'Пользователь'}</b><br><small style="opacity:.6">${user.username ? '@'+user.username : ''}</small></div>`;
 }
 function updateHome() {
-  if (!partner) {
-    document.getElementById('days').textContent = '—';
-    document.getElementById('daysText').textContent = 'Сначала привяжи партнёра';
-    document.getElementById('dateBtn').innerHTML = '';
-    return;
+  const box = document.getElementById('homeWidgets');
+  let html = '';
+  
+  if (partner) {
+    const s = localStorage.getItem('relStart');
+    if (s) {
+      const days = Math.floor((Date.now() - new Date(s)) / 86400000);
+      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
+        <div style="font-size:48px;font-weight:700">${days}</div>
+        <div style="opacity:0.6;margin-top:4px">в отношениях с ${new Date(s).toLocaleDateString('ru-RU')}</div>
+      </div>`;
+    } else {
+      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
+        <div style="font-size:18px">Указать дату начала отношений</div>
+      </div>`;
+    }
   }
-  const s = localStorage.getItem('relStart');
-  if (s) {
-    const days = Math.floor((Date.now() - new Date(s)) / 86400000);
-    document.getElementById('days').textContent = days;
-    document.getElementById('daysText').textContent = 'Вместе с ' + new Date(s).toLocaleDateString('ru-RU');
-    document.getElementById('dateBtn').innerHTML = '';
-  } else {
-    document.getElementById('days').textContent = '—';
-    document.getElementById('daysText').textContent = 'Укажи дату начала отношений';
-    document.getElementById('dateBtn').innerHTML = '<button onclick="setDate()">Указать дату</button>';
+  
+  const upcoming = allEvents.filter(e => e.date >= new Date().toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
+  if (upcoming.length) {
+    const ev = upcoming[0];
+    html += `<div class="card" onclick="openNearestEvent()" style="margin-top:12px">
+      <div style="font-size:13px;opacity:0.6">Ближайшее событие</div>
+      <div style="font-size:18px;font-weight:600;margin-top:4px">${ev.title}</div>
+      <div style="opacity:0.7;margin-top:2px">${ev.date}</div>
+    </div>`;
+  }
+  
+  box.innerHTML = html || '<div class="card" style="text-align:center;opacity:0.6">Привяжи партнёра, чтобы увидеть виджеты</div>';
+}
+
+function openRelDate() {
+  const d = prompt('Дата начала отношений (ГГГГ-ММ-ДД):', localStorage.getItem('relStart') || '2024-01-01');
+  if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    localStorage.setItem('relStart', d);
+    updateHome();
   }
 }
-function setDate() {
-  const d = prompt('Дата начала (ГГГГ-ММ-ДД):', '2024-01-01');
-  if (d) { localStorage.setItem('relStart', d); updateHome(); }
+
+function openNearestEvent() {
+  const upcoming = allEvents.filter(e => e.date >= new Date().toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
+  if (!upcoming.length) return;
+  const ev = upcoming[0];
+  show('calendar');
+  setTimeout(() => {
+    onDateClick(ev.date);
+    setTimeout(() => {
+      const events = allEvents.filter(e => e.date === ev.date);
+      const idx = events.findIndex(e => e.title === ev.title);
+      if (idx >= 0) showEventDetailByDate(ev.date, idx);
+    }, 100);
+  }, 100);
 }
 async function init() {
   ['planModal','remindModal','eventsModal','eventDetailModal','filtersModal'].forEach(id => {
