@@ -237,7 +237,7 @@ function onDateClick(date) {
   }
   const today = new Date(); today.setHours(0,0,0,0);
   if (new Date(date) >= today) {
-    html += `<button onclick="openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить событие</button>`;
+    html += `<button onclick="event.stopPropagation(); openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить событие</button>`;
   }
   list.innerHTML = html;
   document.getElementById('eventsModal').classList.add('show');
@@ -245,8 +245,10 @@ function onDateClick(date) {
 function openPlanForDate(date) {
   window.selectedDate = date;
   document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
-  document.getElementById('planModal').classList.add('show');
-  closeEvents();
+  document.getElementById('eventsModal').classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('planModal').classList.add('show');
+  }, 50);
 }
 function showEventDetailByDate(date, index) {
   const events = allEvents.filter(e => e.date === date);
