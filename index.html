@@ -398,31 +398,33 @@ function updateHome() {
   const box = document.getElementById('homeWidgets');
   let html = '';
   
-  const s = localStorage.getItem('relStart');
-  if (s) {
-    const days = Math.floor((Date.now() - new Date(s)) / 86400000);
-    html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
-      <div style="font-size:48px;font-weight:700">${days}</div>
-      <div style="opacity:0.6;margin-top:4px">в отношениях с ${new Date(s).toLocaleDateString('ru-RU')}</div>
-    </div>`;
-  } else {
-    html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
-      <div style="font-size:18px">Указать дату начала отношений</div>
-    </div>`;
-  }
-  
   if (partner) {
+    const s = localStorage.getItem('relStart');
+    if (s) {
+      const days = Math.floor((Date.now() - new Date(s)) / 86400000);
+      const [y,m,d] = s.split('-');
+      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
+        <div style="font-size:48px;font-weight:700">${days}</div>
+        <div style="opacity:0.6;margin-top:4px">в отношениях с ${d}.${m}.${y}</div>
+      </div>`;
+    } else {
+      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
+        <div style="font-size:18px">Указать дату начала отношений</div>
+      </div>`;
+    }
+    
     html += `<div class="card" id="moodWidget" style="margin-top:12px;text-align:center;padding:20px">
-      <div style="font-size:15px;margin-bottom:12px">Настроение партнёра</div>
-      <div id="partnerMood" style="font-size:20px;font-weight:600">Загрузка...</div>
-      <div style="margin-top:16px;font-size:14px;opacity:0.7">Как вы себя чувствуете?</div>
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
-        <button onclick="setMyMood('плохо')" style="background:#ff4444;padding:10px 16px;font-size:14px">Плохо</button>
-        <button onclick="setMyMood('нормально')" style="background:#ffaa00;padding:10px 16px;font-size:14px">Нормально</button>
-        <button onclick="setMyMood('хорошо')" style="background:#44cc44;padding:10px 16px;font-size:14px">Хорошо</button>
+      <div style="font-size:15px;margin-bottom:8px">Настроение партнёра</div>
+      <div id="partnerMood" style="font-size:22px;font-weight:600;margin-bottom:12px">...</div>
+      <div id="myMoodBtns">
+        <div style="font-size:14px;opacity:0.7;margin-bottom:8px">Как вы себя чувствуете?</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button onclick="setMyMood('плохо')" style="background:#ff4444;padding:10px 14px;font-size:14px">Плохо</button>
+          <button onclick="setMyMood('нормально')" style="background:#ffaa00;padding:10px 14px;font-size:14px">Нормально</button>
+          <button onclick="setMyMood('хорошо')" style="background:#44cc44;padding:10px 14px;font-size:14px">Хорошо</button>
+        </div>
       </div>
     </div>`;
-    loadPartnerMood();
   }
   
   const upcoming = allEvents.filter(e => e.date >= new Date().toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
@@ -436,6 +438,19 @@ function updateHome() {
   }
   
   box.innerHTML = html;
+  if (partner) loadPartnerMood();
+}
+
+function openRelDate() {
+  const cur = localStorage.getItem('relStart');
+  let def = '01.01.2024';
+  if (cur) { const [y,m,d] = cur.split('-'); def = `${d}.${m}.${y}`; }
+  const inp = prompt('Дата начала (ДД.ММ.ГГГГ):', def);
+  if (!inp) return;
+  const m = inp.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!m) return tg.showAlert('Формат: ДД.ММ.ГГГГ');
+  localStorage.setItem('relStart', `${m[3]}-${m[2]}-${m[1]}`);
+  updateHome();
 }
 
 async function setMyMood(mood) {
@@ -444,6 +459,7 @@ async function setMyMood(mood) {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user_id: userId, mood})
   });
+  document.getElementById('myMoodBtns').style.display = 'none';
   tg.HapticFeedback.notificationOccurred('success');
   loadPartnerMood();
 }
