@@ -47,7 +47,15 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(
 .close-modal{font-size:30px;cursor:pointer;opacity:.5;line-height:1}
 .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:600;overflow:hidden}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.days-num{font-size:64px;font-weight:800;background:linear-gradient(135deg,#f472b6,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-3px}
+.days-num{font-size:80px;font-weight:800;background:linear-gradient(135deg,#f9a8d4,#fb923c,#fcd34d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-5px;line-height:.9}
+.days-widget{text-align:center;padding:36px 24px;background:linear-gradient(160deg,#1c1525 0%,#12101a 50%,#0d0d12 100%);border-radius:32px;border:1px solid rgba(139,92,246,.2);box-shadow:0 20px 60px rgba(139,92,246,.08),inset 0 1px 0 rgba(255,255,255,.05)}
+.widget-label{font-size:14px;color:var(--muted);margin-top:10px;font-weight:500}
+.mood-widget{text-align:center;padding:28px 22px;background:linear-gradient(160deg,#15201a 0%,#101510 100%);border-radius:32px;border:1px solid rgba(34,197,94,.15);box-shadow:0 16px 48px rgba(34,197,94,.06);margin-top:14px}
+.mood-value{font-size:32px;font-weight:700;margin:10px 0;background:linear-gradient(135deg,#4ade80,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.event-widget{padding:22px 20px;background:linear-gradient(160deg,#1a1525 0%,#12101a 100%);border-radius:32px;border:1px solid rgba(139,92,246,.18);box-shadow:0 16px 48px rgba(139,92,246,.08);margin-top:14px}
+.event-widget .ev-label{font-size:12px;color:var(--muted);font-weight:600}
+.event-widget .ev-title{font-size:22px;font-weight:700;margin-top:8px;color:#c4b5fd}
+.event-widget .ev-date{color:var(--muted);font-size:14px;margin-top:6px}
 h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
 .cats{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
 .cat{padding:10px 18px;border-radius:22px;background:var(--card2);font-size:14px;cursor:pointer;font-weight:500;transition:.15s}
@@ -59,10 +67,10 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">Couple Dairy</div>
-  <div class="menu-item" onclick="show('home')">🏠 Главная</div>
-  <div class="menu-item" onclick="show('calendar')">📅 Календарь</div>
-  <div class="menu-item" onclick="show('dates')">💑 Свидания</div>
-  <div class="menu-item" onclick="show('link')">🔗 Привязать партнёра</div>
+  <div class="menu-item" onclick="show('home')"><span style="margin-right:14px;font-size:18px">⌂</span>Главная</div>
+  <div class="menu-item" onclick="show('calendar')"><span style="margin-right:14px;font-size:18px">▦</span>Календарь</div>
+  <div class="menu-item" onclick="show('dates')"><span style="margin-right:14px;font-size:18px">♡</span>Свидания</div>
+  <div class="menu-item" onclick="show('link')"><span style="margin-right:14px;font-size:18px">⊕</span>Привязать партнёра</div>
   <div class="sidebar-footer" id="footer">Загрузка...</div>
 </div>
 <div class="header">
@@ -409,25 +417,25 @@ function updateHome() {
     if (s) {
       const days = Math.floor((Date.now() - new Date(s)) / 86400000);
       const [y,m,d] = s.split('-');
-      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
-        <div style="font-size:48px;font-weight:700">${days}</div>
-        <div style="opacity:0.6;margin-top:4px">в отношениях с ${d}.${m}.${y}</div>
+      html += `<div class="days-widget" onclick="openRelDate()">
+        <div class="days-num">${days}</div>
+        <div class="widget-label">в отношениях с ${d}.${m}.${y}</div>
       </div>`;
     } else {
-      html += `<div class="card" onclick="openRelDate()" style="text-align:center;padding:24px">
-        <div style="font-size:18px">Указать дату начала отношений</div>
+      html += `<div class="days-widget" onclick="openRelDate()">
+        <div style="font-size:18px;font-weight:600">Указать дату начала</div>
       </div>`;
     }
     
-    html += `<div class="card" id="moodWidget" style="margin-top:12px;text-align:center;padding:20px">
-      <div style="font-size:15px;margin-bottom:8px">Настроение партнёра</div>
-      <div id="partnerMood" style="font-size:22px;font-weight:600;margin-bottom:12px">...</div>
-      <div id="myMoodBtns" style="display:none">
-        <div style="font-size:14px;opacity:0.7;margin-bottom:8px">Как вы себя чувствуете?</div>
+    html += `<div class="mood-widget" id="moodWidget">
+      <div class="widget-label">Настроение партнёра</div>
+      <div class="mood-value" id="partnerMood">...</div>
+      <div id="myMoodBtns" style="display:none;margin-top:12px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Как вы себя чувствуете?</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="setMyMood('плохо')" style="background:#ff4444;padding:10px 14px;font-size:14px">Плохо</button>
-          <button onclick="setMyMood('нормально')" style="background:#ffaa00;padding:10px 14px;font-size:14px">Нормально</button>
-          <button onclick="setMyMood('хорошо')" style="background:#44cc44;padding:10px 14px;font-size:14px">Хорошо</button>
+          <button onclick="setMyMood('плохо')" style="background:#ef4444;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Плохо</button>
+          <button onclick="setMyMood('нормально')" style="background:#f59e0b;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Нормально</button>
+          <button onclick="setMyMood('хорошо')" style="background:#22c55e;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Хорошо</button>
         </div>
       </div>
     </div>`;
@@ -436,10 +444,10 @@ function updateHome() {
   const upcoming = allEvents.filter(e => e.date >= new Date().toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
   if (upcoming.length) {
     const ev = upcoming[0];
-    html += `<div class="card" onclick="openNearestEvent()" style="margin-top:12px">
-      <div style="font-size:13px;opacity:0.6">Ближайшее событие</div>
-      <div style="font-size:18px;font-weight:600;margin-top:4px">${ev.title}</div>
-      <div style="opacity:0.7;margin-top:2px">${ev.date}</div>
+    html += `<div class="event-widget" onclick="openNearestEvent()">
+      <div class="ev-label">Ближайшее событие</div>
+      <div class="ev-title">${ev.title}</div>
+      <div class="ev-date">${ev.date}</div>
     </div>`;
   }
   
