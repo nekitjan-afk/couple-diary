@@ -36,7 +36,12 @@ async def init_db():
             )
         """)
         await conn.execute("""
-            CREATE TABLE IF NOT EXISTS reminders (
+            CREATE TABLE IF NOT EXISTS moods (
+                user_id BIGINT PRIMARY KEY,
+                mood TEXT,
+                updated_at TEXT
+            )
+        """)
                 id SERIAL PRIMARY KEY,
                 event_title TEXT,
                 event_date TEXT,
