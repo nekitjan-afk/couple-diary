@@ -123,6 +123,7 @@ async def check_reminders():
     print("=== Reminder checker started ===")
     while True:
         try:
+            await db.cleanup_old_events()
             reminders = await db.get_due_reminders()
             print(f"Due reminders: {len(reminders)}")
             for r in reminders:
