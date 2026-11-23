@@ -136,6 +136,11 @@ async def add_reminder(event_title: str, event_date: str, remind_at: str, user_i
         """, event_title, event_date, remind_at, user_id, partner_id, target, text)
     return True
 
+async def cleanup_old_events():
+    today = datetime.now().strftime("%Y-%m-%d")
+    async with pool.acquire() as conn:
+        await conn.execute("DELETE FROM events WHERE date < $1", today)
+
 async def get_due_reminders():
     from datetime import datetime, timezone, timedelta
     # Сервер в UTC, пользователь в GMT+3
