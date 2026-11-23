@@ -265,9 +265,10 @@ function backToDayList() {
 async function loadEvents() {
   try {
     const r = await fetch('/api/events?user_id=' + userId);
-    allEvents = await r.json();
+    allEvents = await r.json() || [];
     renderCalendar();
-  } catch(e) {}
+    updateHome();
+  } catch(e) { allEvents = []; }
 }
 function openEventsList() {
   document.getElementById('eventsModalTitle').textContent = 'Все события';
@@ -416,7 +417,7 @@ function updateHome() {
     html += `<div class="card" id="moodWidget" style="margin-top:12px;text-align:center;padding:20px">
       <div style="font-size:15px;margin-bottom:8px">Настроение партнёра</div>
       <div id="partnerMood" style="font-size:22px;font-weight:600;margin-bottom:12px">...</div>
-      <div id="myMoodBtns">
+      <div id="myMoodBtns" style="display:none">
         <div style="font-size:14px;opacity:0.7;margin-bottom:8px">Как вы себя чувствуете?</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button onclick="setMyMood('плохо')" style="background:#ff4444;padding:10px 14px;font-size:14px">Плохо</button>
@@ -438,7 +439,22 @@ function updateHome() {
   }
   
   box.innerHTML = html;
-  if (partner) loadPartnerMood();
+  if (partner) {
+    loadPartnerMood();
+    checkMoodTime();
+  }
+}
+
+function checkMoodTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const slots = [10, 14, 18, 22];
+  const key = 'moodSlot_' + now.toISOString().slice(0,10) + '_' + h;
+  const already = localStorage.getItem(key);
+  if (slots.includes(h) && !already) {
+    const btns = document.getElementById('myMoodBtns');
+    if (btns) btns.style.display = 'block';
+  }
 }
 
 function openRelDate() {
@@ -460,6 +476,9 @@ async function setMyMood(mood) {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({user_id: userId, mood})
   });
+  const now = new Date();
+  const key = 'moodSlot_' + now.toISOString().slice(0,10) + '_' + now.getHours();
+  localStorage.setItem(key, '1');
   document.getElementById('myMoodBtns').style.display = 'none';
   tg.HapticFeedback.notificationOccurred('success');
   loadPartnerMood();
