@@ -180,7 +180,12 @@ async def get_wishes(user_id: int):
         """, user_id)
         return [(r["user_id"], r["title"], r["cat"], r["description"], r["link"], r["photo"]) for r in rows]
 
-async def set_mood(user_id: int, mood: str, date: str = None):
+async def delete_wish(user_id: int, title: str):
+    async with pool.acquire() as conn:
+        await conn.execute("""
+            DELETE FROM wishlist WHERE user_id = $1 AND title = $2
+        """, user_id, title)
+    return True
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
     async with pool.acquire() as conn:
