@@ -216,13 +216,13 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
 </div>
 
 <div class="modal" id="planModal" onclick="closePlan(event)">
-  <div class="modal-content" onclick="event.stopPropagation()" style="z-index:3000">
+  <div class="modal-content" onclick="event.stopPropagation()" style="z-index:3000;pointer-events:auto">
     <div class="modal-header">
       <div class="modal-title" id="planTitle">Запланировать</div>
       <div class="close-modal" onclick="closePlan()">×</div>
     </div>
-    <input id="planEvTitle" placeholder="Название" style="pointer-events:auto">
-    <textarea id="planEvDesc" placeholder="Описание" rows="2" style="pointer-events:auto"></textarea>
+    <input id="planEvTitle" placeholder="Название" style="pointer-events:auto;position:relative;z-index:10">
+    <textarea id="planEvDesc" placeholder="Описание" rows="2" style="pointer-events:auto;position:relative;z-index:10"></textarea>
     <button onclick="addEventFromPlan()">Запланировать событие</button>
   </div>
 </div>
@@ -342,13 +342,15 @@ function onDateClick(date) {
 }
 function openPlanForDate(date) {
   window.selectedDate = date;
-  document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
+  const [y,m,d] = date.split('-');
+  document.getElementById('planTitle').textContent = 'Запланировать на ' + d + '.' + m + '.' + y;
   const eventsModal = document.getElementById('eventsModal');
   if (eventsModal) { eventsModal.classList.remove('show'); eventsModal.style.display = 'none'; }
   setTimeout(() => {
     const planModal = document.getElementById('planModal');
     if (planModal) { planModal.style.display = 'flex'; planModal.classList.add('show'); }
-  }, 50);
+    document.getElementById('planEvTitle').focus();
+  }, 100);
 }
 function showEventDetailByDate(date, index) {
   const events = allEvents.filter(e => e.date === date);
