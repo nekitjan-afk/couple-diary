@@ -617,13 +617,12 @@ async function randomDate() {
   const box = document.getElementById('dateResult');
   box.innerHTML = '<div class="date-card">Загрузка...</div>';
   try {
-    const r = await fetch('https://bored-api.appbrewery.com/random');
+    const r = await fetch('/api/date-idea');
     const d = await r.json();
     const typeMap = {social:'Общение', recreational:'Активный', cooking:'Еда', relaxation:'Отдых', music:'Музыка', diy:'Творчество', education:'Развитие', charity:'Добрые дела', busywork:'Дела'};
     box.innerHTML = `<div class="date-card">
       <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${typeMap[d.type] || d.type || 'Идея'}</div>
       <div style="font-size:20px;font-weight:700">${d.activity}</div>
-      <div style="margin-top:8px;opacity:.6;font-size:14px">${d.participants ? d.participants + ' чел.' : ''}</div>
     </div>`;
   } catch(e) {
     box.innerHTML = '<div class="date-card">Не удалось загрузить идею</div>';
