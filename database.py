@@ -36,7 +36,16 @@ async def init_db():
             )
         """)
         await conn.execute("""
-            CREATE TABLE IF NOT EXISTS moods (
+            CREATE TABLE IF NOT EXISTS wishlist (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT,
+                partner_id BIGINT,
+                title TEXT,
+                cat TEXT,
+                description TEXT,
+                created_at TEXT
+            )
+        """)
                 user_id BIGINT PRIMARY KEY,
                 mood TEXT,
                 updated_at TEXT
