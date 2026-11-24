@@ -100,7 +100,10 @@ async def api_set_mood(request):
     await db.set_mood(data.get("user_id"), data.get("mood"), data.get("date"))
     return web.json_response({"ok": True})
 
-async def api_add_wish(request):
+async def api_delete_wish(request):
+    data = await request.json()
+    await db.delete_wish(data.get("user_id"), data.get("title"))
+    return web.json_response({"ok": True})
     data = await request.json()
     await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""), data.get("link", ""), data.get("photo", ""))
     return web.json_response({"ok": True})
@@ -209,6 +212,7 @@ async def start_web_server():
     app.router.add_post("/api/event", api_add_event)
     app.router.add_post("/api/event/delete", api_delete_event)
     app.router.add_post("/api/reminder", api_add_reminder)
+    app.router.add_post("/api/wish/delete", api_delete_wish)
     app.router.add_post("/api/wish", api_add_wish)
     app.router.add_get("/api/wishes", api_get_wishes)
     app.router.add_post("/api/mood", api_set_mood)
