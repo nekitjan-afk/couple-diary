@@ -124,7 +124,17 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
       <button onclick="setMyMood('хорошо')" style="background:#22c55e">Хорошо</button>
     </div>
   </div>
-</div><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
+</div>
+<div class="modal" id="filtersModal" onclick="closeFilters(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Фильтры</div>
+      <div class="close-modal" onclick="closeFilters()">×</div>
+    </div>
+    <div class="cats" id="cats"></div>
+    <button onclick="closeFilters()">Готово</button>
+  </div>
+</div>
 <div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="eventsModalTitle">События</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
 <div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -207,8 +217,14 @@ const CATEGORIES = [
   {id:'бюджет', name:'Бюджетные'}
 ];
 
-function openMenu(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
-function closeMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function openMenu(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeMenu(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
 function show(id){
   closeMenu();
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -612,11 +628,6 @@ async function randomDate() {
   } catch(e) {
     box.innerHTML = '<div class="date-card">Не удалось загрузить идею</div>';
   }
-}
-  let list = currentCat === 'all' ? DATE_IDEAS : DATE_IDEAS.filter(d => d.cat === currentCat);
-  if (!list.length) return;
-  const idea = list[Math.floor(Math.random() * list.length)];
-  document.getElementById('dateResult').innerHTML = `<div class="date-card"><div style="font-size:20px;font-weight:700;margin-bottom:8px">${idea.title}</div><div style="opacity:0.8">${idea.desc}</div></div>`;
 }
 init();
 </script>
