@@ -721,13 +721,12 @@ function renderWishlist() {
     box.innerHTML = '<div class="wish-item" style="text-align:center;opacity:.5">Пока пусто</div>';
     return;
   }
-  box.innerHTML = list.map((w, i) => `
-    <div class="wish-item" onclick="openWishDetail(${i})" style="cursor:pointer">
-      ${w.photo ? `<img src="${w.photo}" style="width:100%;border-radius:12px;margin-bottom:8px;max-height:140px;object-fit:cover">` : ''}
-      <div style="font-weight:600">${w.title}</div>
-      ${w.link ? `<div style="opacity:.6;font-size:13px;margin-top:4px">${(w.link||'').slice(0,40)}</div>` : ''}
+  box.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${list.map((w, i) => `
+    <div class="wish-item" onclick="openWishDetail(${i})" style="cursor:pointer;margin:0">
+      ${w.photo ? `<img src="${w.photo}" style="width:100%;border-radius:12px;margin-bottom:8px;height:100px;object-fit:cover">` : '<div style="height:100px;background:var(--card2);border-radius:12px;margin-bottom:8px"></div>'}
+      <div style="font-weight:600;font-size:14px">${w.title}</div>
     </div>
-  `).join('');
+  `).join('')}</div>`;
 }
 
 function openWishDetail(idx) {
@@ -735,11 +734,13 @@ function openWishDetail(idx) {
   const list = wishTab === 'подарки' ? filtered.filter(w => wishOwner === 'me' ? String(w.user_id) === String(userId) : String(w.user_id) !== String(userId)) : filtered;
   const w = list[idx];
   if (!w) return;
+  window.currentWish = w;
   const titleEl = document.getElementById('wishDetailTitle');
   const photo = document.getElementById('wishDetailPhoto');
   const linkEl = document.getElementById('wishDetailLink');
   const descEl = document.getElementById('wishDetailDesc');
   const modal = document.getElementById('wishDetailModal');
+  const delBtn = document.getElementById('wishDeleteBtn');
   if (titleEl) titleEl.textContent = w.title || '';
   if (photo) { 
     if (w.photo) { photo.src = w.photo; photo.style.display = 'block'; } 
@@ -747,6 +748,7 @@ function openWishDetail(idx) {
   }
   if (linkEl) linkEl.textContent = w.link || '';
   if (descEl) descEl.textContent = w.desc || 'Без описания';
+  if (delBtn) delBtn.style.display = String(w.user_id) === String(userId) ? 'block' : 'none';
   if (modal) { modal.style.display = 'flex'; modal.classList.add('show'); }
 }
 function closeWishDetail(e) {
