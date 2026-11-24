@@ -569,11 +569,11 @@ function openRelDate() {
 
 function openMoodModal() {
   const m = document.getElementById('moodModal');
-  if (m) m.classList.add('show');
+  if (m) { m.style.display = 'flex'; m.classList.add('show'); }
 }
 function closeMoodModal(e) {
   const m = document.getElementById('moodModal');
-  if (m && (!e || e.target.id === 'moodModal')) m.classList.remove('show');
+  if (m && (!e || e.target.id === 'moodModal')) { m.classList.remove('show'); m.style.display = 'none'; }
 }
 async function setMyMood(mood) {
   await fetch('/api/mood', {
