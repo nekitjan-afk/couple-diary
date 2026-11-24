@@ -128,6 +128,17 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
   </div>
 </div>
 
+<div class="modal" id="wishDetailModal" onclick="closeWishDetail(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="wishDetailTitle">Детали</div>
+      <div class="close-modal" onclick="closeWishDetail()">×</div>
+    </div>
+    <img id="wishDetailPhoto" style="width:100%;border-radius:16px;margin-bottom:12px;display:none;max-height:200px;object-fit:cover">
+    <div id="wishDetailLink" style="opacity:.7;margin-bottom:8px;word-break:break-all"></div>
+    <div id="wishDetailDesc" style="line-height:1.5"></div>
+  </div>
+</div>
 <div class="modal" id="wishModal" onclick="closeWishModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -594,9 +605,9 @@ function openNearestEvent() {
   }, 100);
 }
 async function init() {
-  ['planModal','remindModal','eventsModal','eventDetailModal','filtersModal'].forEach(id => {
+  ['planModal','remindModal','eventsModal','eventDetailModal','filtersModal','moodModal','wishModal','wishDetailModal'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.classList.remove('show');
+    if (el) { el.classList.remove('show'); el.style.display = 'none'; }
   });
   document.getElementById('myCode').textContent = userId ? String(userId).slice(-6).padStart(6,'0') : 'НЕТ ID';
   renderFooter();
@@ -710,35 +721,67 @@ function renderWishlist() {
     box.innerHTML = '<div class="wish-item" style="text-align:center;opacity:.5">Пока пусто</div>';
     return;
   }
-  box.innerHTML = list.map(w => `
-    <div class="wish-item">
-      ${w.photo ? `<img src="${w.photo}" style="width:100%;border-radius:12px;margin-bottom:8px;max-height:160px;object-fit:cover">` : ''}
+  box.innerHTML = list.map((w, i) => `
+    <div class="wish-item" onclick="openWishDetail(${i})" style="cursor:pointer">
+      ${w.photo ? `<img src="${w.photo}" style="width:100%;border-radius:12px;margin-bottom:8px;max-height:140px;object-fit:cover">` : ''}
       <div style="font-weight:600">${w.title}</div>
-      ${w.link ? `<div style="opacity:.6;font-size:13px;margin-top:4px">${w.link}</div>` : ''}
-      ${w.desc ? `<div style="opacity:.7;margin-top:4px;font-size:14px">${w.desc}</div>` : ''}
+      ${w.link ? `<div style="opacity:.6;font-size:13px;margin-top:4px">${w.link.slice(0,40)}${w.link.length>40?'...':''}</div>` : ''}
     </div>
   `).join('');
 }
 
+function openWishDetail(idx) {
+  const filtered = wishItems.filter(w => w.cat === wishTab);
+  const list = wishTab === 'подарки' ? filtered.filter(w => wishOwner === 'me' ? w.user_id == userId : w.user_id != userId) : filtered;
+  const w = list[idx];
+  if (!w) return;
+  const titleEl = document.getElementById('wishDetailTitle');
+  const photo = document.getElementById('wishDetailPhoto');
+  const linkEl = document.getElementById('wishDetailLink');
+  const descEl = document.getElementById('wishDetailDesc');
+  const modal = document.getElementById('wishDetailModal');
+  if (titleEl) titleEl.textContent = w.title;
+  if (photo) { if (w.photo) { photo.src = w.photo; photo.style.display = 'block'; } else photo.style.display = 'none'; }
+  if (linkEl) linkEl.textContent = w.link || '';
+  if (descEl) descEl.textContent = w.desc || 'Без описания';
+  if (modal) modal.classList.add('show');
+}
+function closeWishDetail(e) {
+  const modal = document.getElementById('wishDetailModal');
+  if (modal && (!e || e.target.id === 'wishDetailModal')) modal.classList.remove('show');
+}
+
 function openWishModal() {
-  document.getElementById('wishModal').classList.add('show');
+  const m = document.getElementById('wishModal');
+  if (m) { m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
 }
 function closeWishModal(e) {
-  if (!e || e.target.id === 'wishModal') document.getElementById('wishModal').classList.remove('show');
+  const m = document.getElementById('wishModal');
+  if (m && (!e || e.target.id === 'wishModal')) { m.classList.remove('show'); m.style.display = 'none'; }
 }
 async function saveWish() {
   const title = document.getElementById('wishTitle').value.trim();
   if (!title) return tg.showAlert('Введи название');
   const link = document.getElementById('wishLink').value.trim();
   const desc = document.getElementById('wishDesc').value.trim();
+  const file = document.getElementById('wishPhoto').files[0];
+  let photo = '';
+  if (file) {
+    photo = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.readAsDataURL(file);
+    });
+  }
   await fetch('/api/wish', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user_id: userId, title, cat: wishTab, description: desc, link})
+    body: JSON.stringify({user_id: userId, title, cat: wishTab, description: desc, link, photo})
   });
   document.getElementById('wishTitle').value = '';
   document.getElementById('wishLink').value = '';
   document.getElementById('wishDesc').value = '';
+  document.getElementById('wishPhoto').value = '';
   closeWishModal();
   loadWishes();
 }
