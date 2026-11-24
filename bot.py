@@ -104,6 +104,11 @@ async def api_delete_wish(request):
     data = await request.json()
     await db.delete_wish(data.get("user_id"), data.get("title"))
     return web.json_response({"ok": True})
+
+async def api_add_wish(request):
+    data = await request.json()
+    await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""), data.get("link", ""), data.get("photo", ""))
+    return web.json_response({"ok": True})
     data = await request.json()
     await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""), data.get("link", ""), data.get("photo", ""))
     return web.json_response({"ok": True})
