@@ -136,7 +136,9 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
     </div>
     <img id="wishDetailPhoto" style="width:100%;border-radius:16px;margin-bottom:12px;display:none;max-height:200px;object-fit:cover">
     <div id="wishDetailLink" style="opacity:.7;margin-bottom:8px;word-break:break-all"></div>
-    <div id="wishDetailDesc" style="line-height:1.5"></div>
+    <div id="wishDetailDesc" style="line-height:1.5;margin-bottom:16px"></div>
+    <button id="wishCopyBtn" onclick="copyWishLink()" style="background:#2a2a2e;margin-bottom:8px">📋 Копировать ссылку</button>
+    <button id="wishDeleteBtn" onclick="deleteWish()" style="background:#ef4444;display:none">🗑 Удалить</button>
   </div>
 </div>
 <div class="modal" id="wishModal" onclick="closeWishModal(event)">
@@ -754,6 +756,25 @@ function openWishDetail(idx) {
 function closeWishDetail(e) {
   const modal = document.getElementById('wishDetailModal');
   if (modal && (!e || e.target.id === 'wishDetailModal')) { modal.classList.remove('show'); modal.style.display = 'none'; }
+}
+
+function copyWishLink() {
+  const link = document.getElementById('wishDetailLink').textContent;
+  if (link) {
+    navigator.clipboard.writeText(link).then(() => tg.showAlert('Скопировано!')).catch(() => tg.showAlert(link));
+  }
+}
+
+async function deleteWish() {
+  if (!window.currentWish) return;
+  if (!confirm('Удалить этот элемент?')) return;
+  await fetch('/api/wish/delete', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user_id: userId, title: window.currentWish.title})
+  });
+  closeWishDetail();
+  loadWishes();
 }
 
 function openWishModal() {
