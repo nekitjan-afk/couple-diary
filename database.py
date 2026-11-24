@@ -48,6 +48,11 @@ async def init_db():
                 created_at TEXT
             )
         """)
+        try:
+            await conn.execute("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS link TEXT")
+            await conn.execute("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS photo TEXT")
+        except:
+            pass
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS moods (
                 user_id BIGINT PRIMARY KEY,
