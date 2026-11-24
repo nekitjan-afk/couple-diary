@@ -187,6 +187,8 @@ async def delete_wish(user_id: int, title: str):
             DELETE FROM wishlist WHERE user_id = $1 AND title = $2
         """, user_id, title)
     return True
+
+async def set_mood(user_id: int, mood: str, date: str = None):
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
     async with pool.acquire() as conn:
