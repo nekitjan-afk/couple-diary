@@ -168,6 +168,7 @@ async def start_web_server():
     app.router.add_post("/api/reminder", api_add_reminder)
     app.router.add_post("/api/mood", api_set_mood)
     app.router.add_get("/api/mood", api_get_mood)
+    app.router.add_get("/api/date-idea", api_date_idea)
     app.router.add_get("/api/events", api_get_events)
     
     runner = web.AppRunner(app)
