@@ -112,9 +112,23 @@ async def api_get_events(request):
 
 async def api_date_idea(request):
     import aiohttp
+    cat = request.query.get("cat", "all")
+    type_map = {
+        "романтика": "social",
+        "дом": "relaxation",
+        "кино": "recreational",
+        "еда": "cooking",
+        "актив": "recreational",
+        "город": "social",
+        "бюджет": "diy"
+    }
+    api_type = type_map.get(cat, "")
+    url = "https://www.boredapi.com/api/activity"
+    if api_type:
+        url += f"?type={api_type}"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://www.boredapi.com/api/activity', timeout=aiohttp.ClientTimeout(total=5)) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
                 data = await resp.json()
             activity = data.get("activity", "")
             if activity:
