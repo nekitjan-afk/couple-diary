@@ -110,6 +110,16 @@ async def api_get_events(request):
     events = await db.get_events(user_id)
     return web.json_response([{"title": e[0], "date": e[1], "description": e[2]} for e in events])
 
+async def api_date_idea(request):
+    import aiohttp
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://www.boredapi.com/api/activity', timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                data = await resp.json()
+                return web.json_response(data)
+    except:
+        return web.json_response({"activity": "Прогулка по городу", "type": "recreational"})
+
 async def api_add_reminder(request):
     try:
         data = await request.json()
