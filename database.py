@@ -46,6 +46,8 @@ async def init_db():
                 created_at TEXT
             )
         """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS moods (
                 user_id BIGINT PRIMARY KEY,
                 mood TEXT,
                 updated_at TEXT
