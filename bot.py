@@ -102,13 +102,13 @@ async def api_set_mood(request):
 
 async def api_add_wish(request):
     data = await request.json()
-    await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""), data.get("link", ""))
+    await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""), data.get("link", ""), data.get("photo", ""))
     return web.json_response({"ok": True})
 
 async def api_get_wishes(request):
     user_id = int(request.query.get("user_id", 0))
     wishes = await db.get_wishes(user_id)
-    return web.json_response([{"user_id": w[0], "title": w[1], "cat": w[2], "desc": w[3]} for w in wishes])
+    return web.json_response([{"user_id": w[0], "title": w[1], "cat": w[2], "desc": w[3], "link": w[4], "photo": w[5]} for w in wishes])
 
 async def api_get_mood(request):
     user_id = int(request.query.get("user_id", 0))
