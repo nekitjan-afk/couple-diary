@@ -112,7 +112,19 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
   </div>
 </div>
 
-<div class="modal" id="filtersModal" onclick="closeFilters(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
+<div class="modal" id="moodModal" onclick="closeMoodModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Как твоё настроение?</div>
+      <div class="close-modal" onclick="closeMoodModal()">×</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+      <button onclick="setMyMood('плохо')" style="background:#ef4444">Плохо</button>
+      <button onclick="setMyMood('нормально')" style="background:#f59e0b">Нормально</button>
+      <button onclick="setMyMood('хорошо')" style="background:#22c55e">Хорошо</button>
+    </div>
+  </div>
+</div><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title">Фильтры</div><div class="close-modal" onclick="closeFilters()">×</div></div><div class="cats" id="cats"></div><button onclick="closeFilters()">Готово</button></div></div>
 <div class="modal" id="eventsModal" onclick="closeEvents(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-title" id="eventsModalTitle">События</div><div class="close-modal" onclick="closeEvents()">×</div></div><div id="eventsList"></div></div></div>
 <div class="modal" id="eventDetailModal" onclick="closeEventDetail(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -427,17 +439,9 @@ function updateHome() {
       </div>`;
     }
     
-    html += `<div class="mood-widget" id="moodWidget">
+    html += `<div class="mood-widget" id="moodWidget" onclick="openMoodModal()">
       <div class="widget-label">Настроение партнёра</div>
       <div class="mood-value" id="partnerMood">...</div>
-      <div id="myMoodBtns" style="display:none;margin-top:12px">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Как вы себя чувствуете?</div>
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="setMyMood('плохо')" style="background:#ef4444;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Плохо</button>
-          <button onclick="setMyMood('нормально')" style="background:#f59e0b;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Нормально</button>
-          <button onclick="setMyMood('хорошо')" style="background:#22c55e;padding:10px 16px;font-size:13px;width:auto;box-shadow:none">Хорошо</button>
-        </div>
-      </div>
     </div>`;
   }
   
@@ -452,10 +456,7 @@ function updateHome() {
   }
   
   box.innerHTML = html;
-  if (partner) {
-    loadPartnerMood();
-    checkMoodTime();
-  }
+  if (partner) loadPartnerMood();
 }
 
 function checkMoodTime() {
@@ -483,16 +484,19 @@ function openRelDate() {
   updateHome();
 }
 
+function openMoodModal() {
+  document.getElementById('moodModal').classList.add('show');
+}
+function closeMoodModal(e) {
+  if (!e || e.target.id === 'moodModal') document.getElementById('moodModal').classList.remove('show');
+}
 async function setMyMood(mood) {
   await fetch('/api/mood', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user_id: userId, mood})
+    body: JSON.stringify({user_id: userId, mood, date: new Date().toISOString().slice(0,10)})
   });
-  const now = new Date();
-  const key = 'moodSlot_' + now.toISOString().slice(0,10) + '_' + now.getHours();
-  localStorage.setItem(key, '1');
-  document.getElementById('myMoodBtns').style.display = 'none';
+  closeMoodModal();
   tg.HapticFeedback.notificationOccurred('success');
   loadPartnerMood();
 }
@@ -593,7 +597,22 @@ function renderCats() {
 function setCat(cat) { currentCat = cat; renderCats(); document.getElementById('dateResult').innerHTML = ''; closeFilters(); }
 function openFilters() { document.getElementById('filtersModal').classList.add('show'); }
 function closeFilters(e) { if (!e || e.target.id === 'filtersModal') document.getElementById('filtersModal').classList.remove('show'); }
-function randomDate() {
+async function randomDate() {
+  const box = document.getElementById('dateResult');
+  box.innerHTML = '<div class="date-card">Загрузка...</div>';
+  try {
+    const r = await fetch('https://bored-api.appbrewery.com/random');
+    const d = await r.json();
+    const typeMap = {social:'Общение', recreational:'Активный', cooking:'Еда', relaxation:'Отдых', music:'Музыка', diy:'Творчество', education:'Развитие', charity:'Добрые дела', busywork:'Дела'};
+    box.innerHTML = `<div class="date-card">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${typeMap[d.type] || d.type || 'Идея'}</div>
+      <div style="font-size:20px;font-weight:700">${d.activity}</div>
+      <div style="margin-top:8px;opacity:.6;font-size:14px">${d.participants ? d.participants + ' чел.' : ''}</div>
+    </div>`;
+  } catch(e) {
+    box.innerHTML = '<div class="date-card">Не удалось загрузить идею</div>';
+  }
+}
   let list = currentCat === 'all' ? DATE_IDEAS : DATE_IDEAS.filter(d => d.cat === currentCat);
   if (!list.length) return;
   const idea = list[Math.floor(Math.random() * list.length)];
