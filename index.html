@@ -342,9 +342,11 @@ function onDateClick(date) {
 function openPlanForDate(date) {
   window.selectedDate = date;
   document.getElementById('planTitle').textContent = 'Запланировать на ' + date;
-  document.getElementById('eventsModal').classList.remove('show');
+  const eventsModal = document.getElementById('eventsModal');
+  if (eventsModal) { eventsModal.classList.remove('show'); eventsModal.style.display = 'none'; }
   setTimeout(() => {
-    document.getElementById('planModal').classList.add('show');
+    const planModal = document.getElementById('planModal');
+    if (planModal) { planModal.style.display = 'flex'; planModal.classList.add('show'); }
   }, 50);
 }
 function showEventDetailByDate(date, index) {
@@ -455,7 +457,10 @@ async function saveReminder() {
   tg.showAlert('Напоминание установлено');
   tg.HapticFeedback.notificationOccurred('success');
 }
-function closePlan(e) { if (!e || e.target.id === 'planModal') document.getElementById('planModal').classList.remove('show'); }
+function closePlan(e) { 
+  const m = document.getElementById('planModal');
+  if (m && (!e || e.target.id === 'planModal')) { m.classList.remove('show'); m.style.display = 'none'; }
+}
 async function addEventFromPlan() {
   const title = document.getElementById('planEvTitle').value.trim();
   const date = window.selectedDate;
@@ -582,8 +587,8 @@ async function setMyMood(mood) {
     body: JSON.stringify({user_id: userId, mood, date: new Date().toISOString().slice(0,10)})
   });
   closeMoodModal();
-  tg.HapticFeedback.notificationOccurred('success');
-  loadPartnerMood();
+  if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+  setTimeout(loadPartnerMood, 300);
 }
 
 async function loadPartnerMood() {
