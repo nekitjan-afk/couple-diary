@@ -118,7 +118,7 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
       <h2 style="margin:0">Наш виш-лист</h2>
       <div onclick="openWishModal()" style="width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer">+</div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;white-space:nowrap;padding-bottom:4px">
       <div class="wish-tab active" onclick="setWishTab('подарки')">🎁 Подарки</div>
       <div class="wish-tab" onclick="setWishTab('посмотреть')">👁 Посмотреть</div>
       <div class="wish-tab" onclick="setWishTab('мечты')">✨ Мечты</div>
@@ -128,6 +128,19 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
   </div>
 </div>
 
+<div class="modal" id="wishModal" onclick="closeWishModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Добавить в виш-лист</div>
+      <div class="close-modal" onclick="closeWishModal()">×</div>
+    </div>
+    <input id="wishTitle" placeholder="Название">
+    <input id="wishLink" placeholder="Ссылка или артикул">
+    <textarea id="wishDesc" placeholder="Описание" rows="2"></textarea>
+    <input type="file" id="wishPhoto" accept="image/*" style="padding:12px">
+    <button onclick="saveWish()">Добавить</button>
+  </div>
+</div>
 <div class="modal" id="moodModal" onclick="closeMoodModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
