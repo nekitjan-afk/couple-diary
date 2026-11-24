@@ -100,6 +100,16 @@ async def api_set_mood(request):
     await db.set_mood(data.get("user_id"), data.get("mood"), data.get("date"))
     return web.json_response({"ok": True})
 
+async def api_add_wish(request):
+    data = await request.json()
+    await db.add_wish(data.get("user_id"), data.get("title"), data.get("cat"), data.get("description", ""))
+    return web.json_response({"ok": True})
+
+async def api_get_wishes(request):
+    user_id = int(request.query.get("user_id", 0))
+    wishes = await db.get_wishes(user_id)
+    return web.json_response([{"title": w[0], "cat": w[1], "desc": w[2]} for w in wishes])
+
 async def api_get_mood(request):
     user_id = int(request.query.get("user_id", 0))
     mood = await db.get_partner_mood(user_id)
