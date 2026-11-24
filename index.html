@@ -337,7 +337,8 @@ function onDateClick(date) {
     html += `<button onclick="event.stopPropagation(); openPlanForDate('${date}')" style="margin-top:12px;background:#2a2a2e;">Добавить событие</button>`;
   }
   list.innerHTML = html;
-  document.getElementById('eventsModal').classList.add('show');
+  const modal = document.getElementById('eventsModal');
+  if (modal) { modal.style.display = 'flex'; modal.classList.add('show'); }
 }
 function openPlanForDate(date) {
   window.selectedDate = date;
@@ -358,7 +359,8 @@ function showEventDetailByDate(date, index) {
   document.getElementById('detailDate').textContent = e.date;
   document.getElementById('detailDesc').textContent = e.description || 'Без описания';
   closeEvents();
-  document.getElementById('eventDetailModal').classList.add('show');
+  const detailModal = document.getElementById('eventDetailModal');
+  if (detailModal) { detailModal.style.display = 'flex'; detailModal.classList.add('show'); }
 }
 function backToDayList() {
   closeEventDetail();
@@ -378,7 +380,10 @@ function openEventsList() {
   list.innerHTML = allEvents.length ? allEvents.map((e,i) => `<div class="card" onclick="showEventDetail(${i})"><b>${e.title}</b><br><small>${e.date}</small></div>`).join('') : '<div class="card">Пока нет событий</div>';
   document.getElementById('eventsModal').classList.add('show');
 }
-function closeEvents(e) { if (!e || e.target.id === 'eventsModal') document.getElementById('eventsModal').classList.remove('show'); }
+function closeEvents(e) { 
+  const m = document.getElementById('eventsModal');
+  if (m && (!e || e.target.id === 'eventsModal')) { m.classList.remove('show'); m.style.display = 'none'; }
+}
 function showEventDetail(i) {
   const e = allEvents[i];
   document.getElementById('detailTitle').textContent = e.title;
@@ -387,7 +392,10 @@ function showEventDetail(i) {
   closeEvents();
   document.getElementById('eventDetailModal').classList.add('show');
 }
-function closeEventDetail(e) { if (!e || e.target.id === 'eventDetailModal') document.getElementById('eventDetailModal').classList.remove('show'); }
+function closeEventDetail(e) { 
+  const m = document.getElementById('eventDetailModal');
+  if (m && (!e || e.target.id === 'eventDetailModal')) { m.classList.remove('show'); m.style.display = 'none'; }
+}
 function doDelete(date, title) {
   if (confirm('Удалить событие "' + title + '"?')) {
     deleteEvent(date, title);
@@ -404,7 +412,7 @@ async function deleteEvent(date, title) {
     onDateClick(date);
     tg.HapticFeedback.notificationOccurred('success');
   } catch(e) {
-    tg.showAlert('Ошибка удаления');
+    alert('Ошибка удаления');
   }
 }
 function deleteCurrentEvent() {
@@ -438,7 +446,7 @@ function closeRemind(e) {
 }
 async function saveReminder() {
   const remindAt = document.getElementById('remindAt').value;
-  if (!remindAt) return tg.showAlert('Выбери дату и время');
+  if (!remindAt) return alert('Выбери дату и время');
   const iso = remindAt.length === 16 ? remindAt : remindAt.slice(0,16);
   const target = document.getElementById('remindTarget').value;
   const customText = document.getElementById('remindText').value.trim() || 'Не забудьте о вашем событии';
@@ -454,7 +462,7 @@ async function saveReminder() {
     })
   });
   closeRemind();
-  tg.showAlert('Напоминание установлено');
+  alert('Напоминание установлено');
   tg.HapticFeedback.notificationOccurred('success');
 }
 function closePlan(e) { 
@@ -465,10 +473,10 @@ async function addEventFromPlan() {
   const title = document.getElementById('planEvTitle').value.trim();
   const date = window.selectedDate;
   const description = document.getElementById('planEvDesc').value.trim();
-  if (!title || !date) return tg.showAlert('Введи название');
+  if (!title || !date) return alert('Введи название');
 
   const exists = allEvents.some(e => e.date === date && e.title.toLowerCase() === title.toLowerCase());
-  if (exists) return tg.showAlert('Событие с таким названием уже есть на эту дату');
+  if (exists) return alert('Событие с таким названием уже есть на эту дату');
 
   try {
     const r = await fetch('/api/event', {
@@ -478,12 +486,12 @@ async function addEventFromPlan() {
     });
     if (!r.ok) {
       const txt = await r.text();
-      return tg.showAlert('Ошибка сервера: ' + r.status + ' ' + txt.slice(0,100));
+      return alert('Ошибка сервера: ' + r.status + ' ' + txt.slice(0,100));
     }
     const d = await r.json();
-    if (d && d.ok === false) return tg.showAlert(d.error || 'Ошибка');
+    if (d && d.ok === false) return alert(d.error || 'Ошибка');
   } catch(e) {
-    return tg.showAlert('Ошибка: ' + e.message);
+    return alert('Ошибка: ' + e.message);
   }
 
   document.getElementById('planEvTitle').value = '';
@@ -564,7 +572,7 @@ function openRelDate() {
   const inp = prompt('Дата начала (ДД.ММ.ГГГГ):', def);
   if (!inp) return;
   const parts = inp.trim().split('.');
-  if (parts.length !== 3) return tg.showAlert('Формат: ДД.ММ.ГГГГ');
+  if (parts.length !== 3) return alert('Формат: ДД.ММ.ГГГГ');
   const d = parts[0].padStart(2,'0');
   const m = parts[1].padStart(2,'0');
   const y = parts[2];
@@ -643,18 +651,18 @@ async function init() {
 }
 async function doLink() {
   const code = document.getElementById('pCode').value.trim();
-  if (!code) return tg.showAlert('Введи код');
+  if (!code) return alert('Введи код');
   try {
     const r = await fetch('/api/link', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, code})});
     const d = await r.json();
-    if (!d.ok) return tg.showAlert(d.error || 'Ошибка');
+    if (!d.ok) return alert(d.error || 'Ошибка');
     partner = d.partner;
     renderFooter(); updateHome();
     document.getElementById('linkMsg').textContent = 'Успешно привязан!';
     document.getElementById('unlinkBtn').style.display = 'block';
     document.getElementById('pCode').style.display = 'none';
     document.getElementById('linkBtn').style.display = 'none';
-  } catch(e) { tg.showAlert('Ошибка: ' + e.message); }
+  } catch(e) { alert('Ошибка: ' + e.message); }
 }
 async function doUnlink() {
   if (!confirm('Точно отвязать партнёра?')) return;
@@ -672,9 +680,9 @@ async function addEvent() {
   const title = document.getElementById('evTitle').value.trim();
   const date = document.getElementById('evDate').value;
   const description = document.getElementById('evDesc').value.trim();
-  if (!title || !date) return tg.showAlert('Заполни название и дату');
+  if (!title || !date) return alert('Заполни название и дату');
   const today = new Date(); today.setHours(0,0,0,0);
-  if (new Date(date) < today) return tg.showAlert('Нельзя добавлять события задним числом');
+  if (new Date(date) < today) return alert('Нельзя добавлять события задним числом');
   await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:userId, title, date, description})});
   document.getElementById('evTitle').value = '';
   document.getElementById('evDate').value = '';
@@ -803,7 +811,7 @@ function closeWishModal(e) {
 }
 async function saveWish() {
   const title = document.getElementById('wishTitle').value.trim();
-  if (!title) return tg.showAlert('Введи название');
+  if (!title) return alert('Введи название');
   const link = document.getElementById('wishLink').value.trim();
   const desc = document.getElementById('wishDesc').value.trim();
   const fileInput = document.getElementById('wishPhoto');
