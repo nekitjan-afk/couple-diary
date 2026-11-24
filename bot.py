@@ -199,6 +199,8 @@ async def start_web_server():
     app.router.add_post("/api/event", api_add_event)
     app.router.add_post("/api/event/delete", api_delete_event)
     app.router.add_post("/api/reminder", api_add_reminder)
+    app.router.add_post("/api/wish", api_add_wish)
+    app.router.add_get("/api/wishes", api_get_wishes)
     app.router.add_post("/api/mood", api_set_mood)
     app.router.add_get("/api/mood", api_get_mood)
     app.router.add_get("/api/date-idea", api_date_idea)
