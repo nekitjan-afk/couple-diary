@@ -97,7 +97,7 @@ async def api_delete_event(request):
 
 async def api_set_mood(request):
     data = await request.json()
-    await db.set_mood(data.get("user_id"), data.get("mood"))
+    await db.set_mood(data.get("user_id"), data.get("mood"), data.get("date"))
     return web.json_response({"ok": True})
 
 async def api_get_mood(request):
