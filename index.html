@@ -617,7 +617,7 @@ async function randomDate() {
   const box = document.getElementById('dateResult');
   box.innerHTML = '<div class="date-card">Загрузка...</div>';
   try {
-    const r = await fetch('/api/date-idea');
+    const r = await fetch('/api/date-idea?cat=' + encodeURIComponent(currentCat));
     const d = await r.json();
     const typeMap = {social:'Общение', recreational:'Активный', cooking:'Еда', relaxation:'Отдых', music:'Музыка', diy:'Творчество', education:'Развитие', charity:'Добрые дела', busywork:'Дела'};
     box.innerHTML = `<div class="date-card">
