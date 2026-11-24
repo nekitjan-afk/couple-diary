@@ -154,6 +154,25 @@ async def add_reminder(event_title: str, event_date: str, remind_at: str, user_i
         """, event_title, event_date, remind_at, user_id, partner_id, target, text)
     return True
 
+async def add_wish(user_id: int, title: str, cat: str, description: str = ""):
+    partner = await get_partner_info(user_id)
+    partner_id = partner["user_id"] if partner else None
+    async with pool.acquire() as conn:
+        await conn.execute("""
+            INSERT INTO wishlist (user_id, partner_id, title, cat, description, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        """, user_id, partner_id, title, cat, description, datetime.now().isoformat())
+    return True
+
+async def get_wishes(user_id: int):
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT title, cat, description FROM wishlist
+            WHERE user_id = $1 OR partner_id = $1
+            ORDER BY id DESC
+        """, user_id)
+        return [(r["title"], r["cat"], r["description"]) for r in rows]
+
 async def set_mood(user_id: int, mood: str, date: str = None):
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
