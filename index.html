@@ -697,7 +697,7 @@ function renderWishSubTabs() {
   const box = document.getElementById('wishSubTabs');
   if (!box) return;
   if (wishTab !== 'подарки') { box.innerHTML = ''; return; }
-  const pName = partner ? (partner.name || partner.username || 'Партнёр') : 'Партнёр';
+  const pName = partner ? (partner.username ? '@' + partner.username : partner.name || 'Партнёр') : 'Партнёр';
   box.innerHTML = `
     <div class="wish-tab ${wishOwner==='me'?'active':''}" onclick="setWishOwner('me')">Хочу я</div>
     <div class="wish-tab ${wishOwner==='partner'?'active':''}" onclick="setWishOwner('partner')">Хочет ${pName}</div>
