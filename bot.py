@@ -116,7 +116,16 @@ async def api_date_idea(request):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://www.boredapi.com/api/activity', timeout=aiohttp.ClientTimeout(total=5)) as resp:
                 data = await resp.json()
-                return web.json_response(data)
+            activity = data.get("activity", "")
+            if activity:
+                try:
+                    async with session.get(f'https://api.mymemory.translated.net/get?q={activity}&langpair=en|ru', timeout=aiohttp.ClientTimeout(total=5)) as tr:
+                        tr_data = await tr.json()
+                        translated = tr_data.get("responseData", {}).get("translatedText", activity)
+                        data["activity"] = translated
+                except:
+                    pass
+            return web.json_response(data)
     except:
         return web.json_response({"activity": "Прогулка по городу", "type": "recreational"})
 
