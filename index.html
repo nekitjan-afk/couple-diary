@@ -113,6 +113,19 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
     <div id="linkMsg" style="text-align:center;margin:16px 0;"></div>
     <button id="unlinkBtn" onclick="doUnlink()" style="background:#ff4444;display:none;">Отвязать партнёра</button>
   </div>
+  <div id="wishlist" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Наш виш-лист</h2>
+      <div onclick="openWishModal()" style="width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer">+</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div class="wish-tab active" onclick="setWishTab('подарки')">🎁 Подарки</div>
+      <div class="wish-tab" onclick="setWishTab('посмотреть')">👁 Посмотреть</div>
+      <div class="wish-tab" onclick="setWishTab('мечты')">✨ Мечты</div>
+    </div>
+    <div id="wishSubTabs" style="display:flex;gap:8px;margin-bottom:16px"></div>
+    <div id="wishList"></div>
+  </div>
 </div>
 
 <div class="modal" id="moodModal" onclick="closeMoodModal(event)">
@@ -634,12 +647,14 @@ async function addEvent() {
   loadEvents();
 }
 let wishItems = [];
-let wishTab = 'all';
+let wishTab = 'подарки';
+let wishOwner = 'me';
 
 async function loadWishes() {
   try {
     const r = await fetch('/api/wishes?user_id=' + userId);
     wishItems = await r.json() || [];
+    renderWishSubTabs();
     renderWishlist();
   } catch(e) {}
 }
@@ -647,39 +662,71 @@ async function loadWishes() {
 function setWishTab(tab) {
   wishTab = tab;
   document.querySelectorAll('.wish-tab').forEach((el, i) => {
-    const tabs = ['all','подарки','посмотреть','мечты'];
+    const tabs = ['подарки','посмотреть','мечты'];
     el.classList.toggle('active', tabs[i] === tab);
   });
+  renderWishSubTabs();
+  renderWishlist();
+}
+
+function renderWishSubTabs() {
+  const box = document.getElementById('wishSubTabs');
+  if (!box) return;
+  if (wishTab !== 'подарки') { box.innerHTML = ''; return; }
+  const pName = partner ? (partner.name || partner.username || 'Партнёр') : 'Партнёр';
+  box.innerHTML = `
+    <div class="wish-tab ${wishOwner==='me'?'active':''}" onclick="setWishOwner('me')">Хочу я</div>
+    <div class="wish-tab ${wishOwner==='partner'?'active':''}" onclick="setWishOwner('partner')">Хочет ${pName}</div>
+  `;
+}
+
+function setWishOwner(owner) {
+  wishOwner = owner;
+  renderWishSubTabs();
   renderWishlist();
 }
 
 function renderWishlist() {
   const box = document.getElementById('wishList');
   if (!box) return;
-  const list = wishTab === 'all' ? wishItems : wishItems.filter(w => w.cat === wishTab);
+  let list = wishItems.filter(w => w.cat === wishTab);
+  if (wishTab === 'подарки') {
+    list = list.filter(w => wishOwner === 'me' ? w.user_id == userId : w.user_id != userId);
+  }
   if (!list.length) {
     box.innerHTML = '<div class="wish-item" style="text-align:center;opacity:.5">Пока пусто</div>';
     return;
   }
   box.innerHTML = list.map(w => `
     <div class="wish-item">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${w.cat}</div>
+      ${w.photo ? `<img src="${w.photo}" style="width:100%;border-radius:12px;margin-bottom:8px;max-height:160px;object-fit:cover">` : ''}
       <div style="font-weight:600">${w.title}</div>
+      ${w.link ? `<div style="opacity:.6;font-size:13px;margin-top:4px">${w.link}</div>` : ''}
       ${w.desc ? `<div style="opacity:.7;margin-top:4px;font-size:14px">${w.desc}</div>` : ''}
     </div>
   `).join('');
 }
 
-async function openWishAdd() {
-  const title = prompt('Название:');
-  if (!title) return;
-  const cat = prompt('Категория (подарки / посмотреть / мечты):', 'мечты') || 'мечты';
-  const desc = prompt('Описание (необязательно):') || '';
+function openWishModal() {
+  document.getElementById('wishModal').classList.add('show');
+}
+function closeWishModal(e) {
+  if (!e || e.target.id === 'wishModal') document.getElementById('wishModal').classList.remove('show');
+}
+async function saveWish() {
+  const title = document.getElementById('wishTitle').value.trim();
+  if (!title) return tg.showAlert('Введи название');
+  const link = document.getElementById('wishLink').value.trim();
+  const desc = document.getElementById('wishDesc').value.trim();
   await fetch('/api/wish', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({user_id: userId, title, cat, description: desc})
+    body: JSON.stringify({user_id: userId, title, cat: wishTab, description: desc, link})
   });
+  document.getElementById('wishTitle').value = '';
+  document.getElementById('wishLink').value = '';
+  document.getElementById('wishDesc').value = '';
+  closeWishModal();
   loadWishes();
 }
 function renderCats() {
