@@ -764,9 +764,16 @@ function closeWishDetail(e) {
 
 function copyWishLink() {
   const link = document.getElementById('wishDetailLink').textContent;
-  if (link) {
-    navigator.clipboard.writeText(link).then(() => tg.showAlert('Скопировано!')).catch(() => tg.showAlert(link));
-  }
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.querySelector('#wishDetailModal svg').parentElement;
+    const tip = document.createElement('div');
+    tip.textContent = 'Скопировано';
+    tip.style.cssText = 'position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;margin-bottom:4px';
+    btn.style.position = 'relative';
+    btn.appendChild(tip);
+    setTimeout(() => tip.remove(), 1500);
+  }).catch(() => {});
 }
 
 async function deleteWish() {
