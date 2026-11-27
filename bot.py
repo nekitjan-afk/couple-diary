@@ -227,6 +227,7 @@ async def start_web_server():
     app.router.add_get("/api/wishes", api_get_wishes)
     app.router.add_post("/api/mood", api_set_mood)
     app.router.add_get("/api/mood", api_get_mood)
+    app.router.add_get("/api/poster", api_movie_poster)
     app.router.add_get("/api/date-idea", api_date_idea)
     app.router.add_get("/api/events", api_get_events)
     
