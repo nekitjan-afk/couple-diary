@@ -820,11 +820,13 @@ async function saveWish() {
   let photo = '';
   if (fileInput && fileInput.files && fileInput.files[0]) {
     const file = fileInput.files[0];
-    photo = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(file);
-    });
+    try {
+      photo = await convertImageToJpeg(file);
+    } catch (e) {
+      console.error('Photo convert error:', e);
+      alert('Не удалось обработать фото. Попробуй другое изображение.');
+      return;
+    }
   }
   console.log('Saving wish with photo length:', photo.length);
   await fetch('/api/wish', {
@@ -838,6 +840,43 @@ async function saveWish() {
   if (fileInput) fileInput.value = '';
   closeWishModal();
   loadWishes();
+}
+
+function convertImageToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        const maxSize = 1200;
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = Math.round(height * maxSize / width);
+            width = maxSize;
+          } else {
+            width = Math.round(width * maxSize / height);
+            height = maxSize;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          resolve(dataUrl);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error('Не удалось загрузить изображение'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+    reader.readAsDataURL(file);
+  });
 }
 function renderCats() {
   document.getElementById('cats').innerHTML = CATEGORIES.map(c => `<div class="cat ${c.id===currentCat?'active':''}" onclick="setCat('${c.id}')">${c.name}</div>`).join('');
