@@ -134,7 +134,28 @@ async def api_get_events(request):
     events = await db.get_events(user_id)
     return web.json_response([{"title": e[0], "date": e[1], "description": e[2]} for e in events])
 
-async def api_movie_poster(request):
+async def api_random_movie(request):
+    import random
+    page = random.randint(1, 20)
+    try:
+        async with aiohttp.ClientSession() as session:
+            url = f"https://api.themoviedb.org/3/discover/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&language=ru&sort_by=popularity.desc&page={page}&vote_count.gte=100"
+            async with session.get(url) as resp:
+                data = await resp.json()
+                if data.get("results"):
+                    movie = random.choice(data["results"])
+                    poster = "https://image.tmdb.org/t/p/w500" + movie["poster_path"] if movie.get("poster_path") else None
+                    return web.json_response({
+                        "title": movie.get("title"),
+                        "year": (movie.get("release_date") or "")[:4],
+                        "rating": movie.get("vote_average"),
+                        "desc": movie.get("overview", "")[:200],
+                        "poster": poster,
+                        "genre": "Фильм"
+                    })
+    except Exception as e:
+        print("Random movie error:", e)
+    return web.json_response({"title": "Интерстеллар", "year": "2014", "rating": 8.6, "desc": "Фантастика", "poster": None, "genre": "Фильм"})
     title = request.query.get("title", "")
     mtype = request.query.get("type", "movie")
     if not title:
