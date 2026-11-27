@@ -745,6 +745,25 @@ const MOVIES = [
   {title:'Матрица', en:'The Matrix', year:1999, genre:'Фантастика', type:'Фильм'},
   {title:'Побег из Шоушенка', en:'The Shawshank Redemption', year:1994, genre:'Драма', type:'Фильм'},
   {title:'Форрест Гамп', en:'Forrest Gump', year:1994, genre:'Драма', type:'Фильм'},
+  {title:'Джокер', en:'Joker', year:2019, genre:'Драма', type:'Фильм'},
+  {title:'Ла-Ла Ленд', en:'La La Land', year:2016, genre:'Мюзикл', type:'Фильм'},
+  {title:'Зеленая книга', en:'Green Book', year:2018, genre:'Драма', type:'Фильм'},
+  {title:'Душа', en:'Soul', year:2020, genre:'Анимация', type:'Фильм'},
+  {title:'Человек-паук: Через вселенные', en:'Spider-Man: Into the Spider-Verse', year:2018, genre:'Анимация', type:'Фильм'},
+  {title:'Великий Гэтсби', en:'The Great Gatsby', year:2013, genre:'Драма', type:'Фильм'},
+  {title:'Титаник', en:'Titanic', year:1997, genre:'Романтика', type:'Фильм'},
+  {title:'Гладиатор', en:'Gladiator', year:2000, genre:'Боевик', type:'Фильм'},
+  {title:'Аватар', en:'Avatar', year:2009, genre:'Фантастика', type:'Фильм'},
+  {title:'Властелин колец', en:'The Lord of the Rings', year:2001, genre:'Фэнтези', type:'Фильм'},
+  {title:'Гарри Поттер', en:'Harry Potter', year:2001, genre:'Фэнтези', type:'Фильм'},
+  {title:'Звездные войны', en:'Star Wars', year:1977, genre:'Фантастика', type:'Фильм'},
+  {title:'Крестный отец', en:'The Godfather', year:1972, genre:'Драма', type:'Фильм'},
+  {title:'Молчание ягнят', en:'The Silence of the Lambs', year:1991, genre:'Триллер', type:'Фильм'},
+  {title:'Список Шиндлера', en:'Schindlers List', year:1993, genre:'Драма', type:'Фильм'},
+  {title:'Пианист', en:'The Pianist', year:2002, genre:'Драма', type:'Фильм'},
+  {title:'Амели', en:'Amelie', year:2001, genre:'Романтика', type:'Фильм'},
+  {title:'1+1', en:'The Intouchables', year:2011, genre:'Драма', type:'Фильм'},
+  {title:'Остров проклятых', en:'Shutter Island', year:2010, genre:'Триллер', type:'Фильм'},
   {title:'Игра в кальмара', en:'Squid Game', year:2021, genre:'Триллер', type:'Сериал'},
   {title:'Очень странные дела', en:'Stranger Things', year:2016, genre:'Фантастика', type:'Сериал'},
   {title:'Ведьмак', en:'The Witcher', year:2019, genre:'Фэнтези', type:'Сериал'},
@@ -755,34 +774,41 @@ const MOVIES = [
   {title:'Во все тяжкие', en:'Breaking Bad', year:2008, genre:'Драма', type:'Сериал'},
   {title:'Шерлок', en:'Sherlock', year:2010, genre:'Детектив', type:'Сериал'},
   {title:'Рик и Морти', en:'Rick and Morty', year:2013, genre:'Анимация', type:'Сериал'},
+  {title:'Корона', en:'The Crown', year:2016, genre:'Драма', type:'Сериал'},
+  {title:'Мандалорец', en:'The Mandalorian', year:2019, genre:'Фантастика', type:'Сериал'},
+  {title:'Миротворец', en:'Peacemaker', year:2022, genre:'Боевик', type:'Сериал'},
+  {title:'Дом дракона', en:'House of the Dragon', year:2022, genre:'Фэнтези', type:'Сериал'},
+  {title:'Эйфория', en:'Euphoria', year:2019, genre:'Драма', type:'Сериал'},
+  {title:'Тьма', en:'Dark', year:2017, genre:'Фантастика', type:'Сериал'},
+  {title:'Бумажный дом', en:'Money Heist', year:2017, genre:'Триллер', type:'Сериал'},
   {title:'Атака титанов', en:'Attack on Titan', year:2013, genre:'Аниме', type:'Аниме'},
   {title:'Тетрадь смерти', en:'Death Note', year:2006, genre:'Триллер', type:'Аниме'},
   {title:'Клинок рассекающий демонов', en:'Demon Slayer', year:2019, genre:'Аниме', type:'Аниме'},
-  {title:'Человек-паук: Через вселенные', en:'Spider-Man: Into the Spider-Verse', year:2018, genre:'Анимация', type:'Фильм'},
-  {title:'Душа', en:'Soul', year:2020, genre:'Анимация', type:'Фильм'},
-  {title:'Ла-Ла Ленд', en:'La La Land', year:2016, genre:'Мюзикл', type:'Фильм'},
-  {title:'Великий Гэтсби', en:'The Great Gatsby', year:2013, genre:'Драма', type:'Фильм'},
-  {title:'Зеленая книга', en:'Green Book', year:2018, genre:'Драма', type:'Фильм'},
-  {title:'Джокер', en:'Joker', year:2019, genre:'Драма', type:'Фильм'}
+  {title:'Наруто', en:'Naruto', year:2002, genre:'Аниме', type:'Аниме'},
+  {title:'Ван Пис', en:'One Piece', year:1999, genre:'Аниме', type:'Аниме'},
+  {title:'Моя геройская академия', en:'My Hero Academia', year:2016, genre:'Аниме', type:'Аниме'},
+  {title:'Стальной алхимик', en:'Fullmetal Alchemist', year:2003, genre:'Аниме', type:'Аниме'},
+  {title:'Ковбой Бибоп', en:'Cowboy Bebop', year:1998, genre:'Аниме', type:'Аниме'}
 ];
 let lastRandomMovie = null;
+let shownMovies = [];
 
-function randomMovie() {
-  const m = MOVIES[Math.floor(Math.random() * MOVIES.length)];
-  lastRandomMovie = m;
-  document.getElementById('randomMovieTitle').textContent = m.title;
-  document.getElementById('randomMovieInfo').textContent = m.type + ' · ' + m.year + ' · ' + m.genre;
-  document.getElementById('addRandomBtn').style.display = 'block';
-  const posterEl = document.getElementById('randomMoviePoster');
-  if (posterEl) {
-    posterEl.style.display = 'none';
-    fetchMoviePoster(m.en || m.title, m.type).then(url => {
-      if (url && posterEl) {
-        posterEl.src = url;
-        posterEl.style.display = 'block';
-        lastRandomMovie.poster = url;
-      }
-    });
+async function randomMovie() {
+  document.getElementById('randomMovieTitle').textContent = 'Загрузка...';
+  document.getElementById('addRandomBtn').style.display = 'none';
+  try {
+    const r = await fetch('/api/random-movie');
+    const m = await r.json();
+    lastRandomMovie = m;
+    document.getElementById('randomMovieTitle').textContent = m.title;
+    document.getElementById('randomMovieInfo').textContent = (m.year || '') + ' · ' + (m.genre || 'Фильм');
+    document.getElementById('randomMovieDesc').textContent = m.desc || '';
+    document.getElementById('movieRating').textContent = m.rating ? m.rating.toFixed(1) : '—';
+    const posterEl = document.getElementById('randomMoviePoster');
+    if (posterEl && m.poster) posterEl.src = m.poster;
+    document.getElementById('addRandomBtn').style.display = 'block';
+  } catch(e) {
+    document.getElementById('randomMovieTitle').textContent = 'Ошибка загрузки';
   }
 }
 
@@ -804,7 +830,7 @@ async function addRandomToWish() {
       user_id: userId,
       title: lastRandomMovie.title,
       cat: 'посмотреть',
-      description: lastRandomMovie.type + ', ' + lastRandomMovie.year + ', ' + lastRandomMovie.genre,
+      description: lastRandomMovie.desc || (lastRandomMovie.year + ' · ' + lastRandomMovie.genre),
       link: '',
       photo: lastRandomMovie.poster || ''
     })
@@ -922,6 +948,9 @@ async function deleteWish() {
 
 function openWishModal() {
   const m = document.getElementById('wishModal');
+  const titleEl = document.querySelector('#wishModal .modal-title');
+  const titles = {подарки:'Добавить подарок', посмотреть:'Добавить фильм/сериал', мечты:'Добавить мечту'};
+  if (titleEl) titleEl.textContent = titles[wishTab] || 'Добавить';
   if (m) { m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10); }
 }
 function closeWishModal(e) {
