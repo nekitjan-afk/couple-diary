@@ -124,6 +124,15 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
       <div class="wish-tab" onclick="setWishTab('мечты')" style="flex:1;text-align:center">✨ Мечты</div>
     </div>
     <div id="wishSubTabs" style="display:flex;gap:8px;margin-bottom:16px"></div>
+    <div id="watchRandom" style="display:none;margin-bottom:16px">
+      <div style="background:linear-gradient(145deg,#1a1a2e 0%,#16213e 100%);border-radius:24px;padding:20px;text-align:center;border:1px solid rgba(139,92,246,.2)">
+        <div style="font-size:13px;opacity:.6;margin-bottom:8px">Что посмотреть сегодня?</div>
+        <div id="randomMovieTitle" style="font-size:20px;font-weight:700;margin-bottom:4px">Нажми кнопку</div>
+        <div id="randomMovieInfo" style="font-size:13px;opacity:.7;margin-bottom:16px"></div>
+        <button onclick="randomMovie()" style="background:linear-gradient(90deg,#7c3aed,#a855f7);width:100%">🎲 Случайный фильм</button>
+        <button onclick="addRandomToWish()" id="addRandomBtn" style="background:#2a2a2e;margin-top:8px;display:none">+ Добавить в виш-лист</button>
+      </div>
+    </div>
     <div id="wishList"></div>
   </div>
 </div>
@@ -710,8 +719,70 @@ function setWishTab(tab) {
     const tabs = ['подарки','посмотреть','мечты'];
     el.classList.toggle('active', tabs[i] === tab);
   });
+  const randomBox = document.getElementById('watchRandom');
+  if (randomBox) randomBox.style.display = tab === 'посмотреть' ? 'block' : 'none';
   renderWishSubTabs();
   renderWishlist();
+}
+
+const MOVIES = [
+  {title:'Интерстеллар', year:2014, genre:'Фантастика', type:'Фильм'},
+  {title:'Начало', year:2010, genre:'Триллер', type:'Фильм'},
+  {title:'Темный рыцарь', year:2008, genre:'Боевик', type:'Фильм'},
+  {title:'Паразиты', year:2019, genre:'Триллер', type:'Фильм'},
+  {title:'Дюна', year:2021, genre:'Фантастика', type:'Фильм'},
+  {title:'Оппенгеймер', year:2023, genre:'Биография', type:'Фильм'},
+  {title:'Бойцовский клуб', year:1999, genre:'Драма', type:'Фильм'},
+  {title:'Матрица', year:1999, genre:'Фантастика', type:'Фильм'},
+  {title:'Побег из Шоушенка', year:1994, genre:'Драма', type:'Фильм'},
+  {title:'Форрест Гамп', year:1994, genre:'Драма', type:'Фильм'},
+  {title:'Игра в кальмара', year:2021, genre:'Триллер', type:'Сериал'},
+  {title:'Очень странные дела', year:2016, genre:'Фантастика', type:'Сериал'},
+  {title:'Ведьмак', year:2019, genre:'Фэнтези', type:'Сериал'},
+  {title:'Черное зеркало', year:2011, genre:'Фантастика', type:'Сериал'},
+  {title:'Друзья', year:1994, genre:'Комедия', type:'Сериал'},
+  {title:'Офис', year:2005, genre:'Комедия', type:'Сериал'},
+  {title:'Игра престолов', year:2011, genre:'Фэнтези', type:'Сериал'},
+  {title:'Во все тяжкие', year:2008, genre:'Драма', type:'Сериал'},
+  {title:'Шерлок', year:2010, genre:'Детектив', type:'Сериал'},
+  {title:'Рик и Морти', year:2013, genre:'Анимация', type:'Сериал'},
+  {title:'Атака титанов', year:2013, genre:'Аниме', type:'Аниме'},
+  {title:'Тетрадь смерти', year:2006, genre:'Триллер', type:'Аниме'},
+  {title:'Клинок рассекающий демонов', year:2019, genre:'Аниме', type:'Аниме'},
+  {title:'Человек-паук: Через вселенные', year:2018, genre:'Анимация', type:'Фильм'},
+  {title:'Душа', year:2020, genre:'Анимация', type:'Фильм'},
+  {title:'Ла-Ла Ленд', year:2016, genre:'Мюзикл', type:'Фильм'},
+  {title:'Великий Гэтсби', year:2013, genre:'Драма', type:'Фильм'},
+  {title:'Зеленая книга', year:2018, genre:'Драма', type:'Фильм'},
+  {title:'Джокер', year:2019, genre:'Драма', type:'Фильм'}
+];
+let lastRandomMovie = null;
+
+function randomMovie() {
+  const m = MOVIES[Math.floor(Math.random() * MOVIES.length)];
+  lastRandomMovie = m;
+  document.getElementById('randomMovieTitle').textContent = m.title;
+  document.getElementById('randomMovieInfo').textContent = m.type + ' · ' + m.year + ' · ' + m.genre;
+  document.getElementById('addRandomBtn').style.display = 'block';
+}
+
+async function addRandomToWish() {
+  if (!lastRandomMovie) return;
+  await fetch('/api/wish', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      user_id: userId,
+      title: lastRandomMovie.title,
+      cat: 'посмотреть',
+      description: lastRandomMovie.type + ', ' + lastRandomMovie.year + ', ' + lastRandomMovie.genre,
+      link: '',
+      photo: ''
+    })
+  });
+  document.getElementById('addRandomBtn').style.display = 'none';
+  document.getElementById('randomMovieTitle').textContent = 'Добавлено!';
+  loadWishes();
 }
 
 function renderWishSubTabs() {
