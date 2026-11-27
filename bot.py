@@ -136,26 +136,37 @@ async def api_get_events(request):
 
 async def api_random_movie(request):
     import random
-    page = random.randint(1, 20)
+    page = random.randint(1, 50)
     try:
         async with aiohttp.ClientSession() as session:
-            url = f"https://api.themoviedb.org/3/discover/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&language=ru&sort_by=popularity.desc&page={page}&vote_count.gte=100"
-            async with session.get(url) as resp:
+            url = f"https://api.themoviedb.org/3/discover/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&language=ru&sort_by=popularity.desc&page={page}&vote_count.gte=50"
+            print(f"Fetching TMDB: page={page}")
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                print(f"TMDB status: {resp.status}")
+                if resp.status != 200:
+                    text = await resp.text()
+                    print(f"TMDB error: {text[:200]}")
+                    return web.json_response({"error": f"TMDB {resp.status}"})
                 data = await resp.json()
-                if data.get("results"):
+                if data.get("results") and len(data["results"]) > 0:
                     movie = random.choice(data["results"])
-                    poster = "https://image.tmdb.org/t/p/w500" + movie["poster_path"] if movie.get("poster_path") else None
+                    poster = None
+                    if movie.get("poster_path"):
+                        poster = "https://image.tmdb.org/t/p/w500" + movie["poster_path"]
                     return web.json_response({
-                        "title": movie.get("title"),
+                        "title": movie.get("title") or movie.get("original_title") or "Без названия",
                         "year": (movie.get("release_date") or "")[:4],
-                        "rating": movie.get("vote_average"),
-                        "desc": movie.get("overview", "")[:200],
+                        "rating": round(movie.get("vote_average", 0), 1),
+                        "desc": (movie.get("overview") or "")[:200],
                         "poster": poster,
                         "genre": "Фильм"
                     })
+                else:
+                    print("No results from TMDB")
+                    return web.json_response({"error": "No results"})
     except Exception as e:
-        print("Random movie error:", e)
-    return web.json_response({"title": "Интерстеллар", "year": "2014", "rating": 8.6, "desc": "Фантастика", "poster": None, "genre": "Фильм"})
+        print(f"Random movie error: {e}")
+        return web.json_response({"error": str(e)})
 
 async def api_movie_poster(request):
     title = request.query.get("title", "")
