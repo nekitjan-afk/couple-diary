@@ -151,37 +151,19 @@ async def api_movie_poster(request):
     except Exception as e:
         print("TMDB error:", e)
     return web.json_response({"poster": None})
-    import aiohttp
+
+async def api_date_idea(request):
     cat = request.query.get("cat", "all")
-    type_map = {
-        "романтика": "social",
-        "дом": "relaxation",
-        "кино": "recreational",
-        "еда": "cooking",
-        "актив": "recreational",
-        "город": "social",
-        "бюджет": "diy"
+    ideas = {
+        "общение": ["Ужин при свечах", "Пикник на закате", "Прогулка под звёздами"],
+        "отдых": ["Кино дома с попкорном", "Настольные игры", "Спа-день дома"],
+        "еда": ["Готовим вместе новый рецепт", "Дегустация десертов", "Завтрак в постель"],
+        "актив": ["Прогулка на велосипедах", "Боулинг", "Каток"],
+        "творчество": ["Рисуем вместе", "Готовим десерт", "Фотосессия дома"]
     }
-    api_type = type_map.get(cat, "")
-    url = "https://www.boredapi.com/api/activity"
-    if api_type:
-        url += f"?type={api_type}"
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
-                data = await resp.json()
-            activity = data.get("activity", "")
-            if activity:
-                try:
-                    async with session.get(f'https://api.mymemory.translated.net/get?q={activity}&langpair=en|ru', timeout=aiohttp.ClientTimeout(total=5)) as tr:
-                        tr_data = await tr.json()
-                        translated = tr_data.get("responseData", {}).get("translatedText", activity)
-                        data["activity"] = translated
-                except:
-                    pass
-            return web.json_response(data)
-    except:
-        return web.json_response({"activity": "Прогулка по городу", "type": "recreational"})
+    import random
+    pool_ideas = ideas.get(cat, ideas["общение"])
+    return web.json_response({"activity": random.choice(pool_ideas), "type": cat})
 
 async def api_add_reminder(request):
     try:
