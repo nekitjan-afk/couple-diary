@@ -51,6 +51,7 @@ async def init_db():
         try:
             await conn.execute("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS link TEXT")
             await conn.execute("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS photo TEXT")
+            await conn.execute("ALTER TABLE wishlist ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'будем смотреть'")
         except:
             pass
         await conn.execute("""
@@ -175,13 +176,18 @@ async def add_wish(user_id: int, title: str, cat: str, description: str = "", li
 async def get_wishes(user_id: int):
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
-            SELECT user_id, title, cat, description, link, photo FROM wishlist
+            SELECT user_id, title, cat, description, link, photo, COALESCE(status, 'будем смотреть') as status FROM wishlist
             WHERE user_id = $1 OR partner_id = $1
             ORDER BY id DESC
         """, user_id)
-        return [(r["user_id"], r["title"], r["cat"], r["description"], r["link"], r["photo"]) for r in rows]
+        return [(r["user_id"], r["title"], r["cat"], r["description"], r["link"], r["photo"], r["status"]) for r in rows]
 
-async def delete_wish(user_id: int, title: str):
+async def set_wish_status(user_id: int, title: str, status: str):
+    async with pool.acquire() as conn:
+        await conn.execute("""
+            UPDATE wishlist SET status = $1 WHERE user_id = $2 AND title = $3
+        """, status, user_id, title)
+    return True
     async with pool.acquire() as conn:
         await conn.execute("""
             DELETE FROM wishlist WHERE user_id = $1 AND title = $2
