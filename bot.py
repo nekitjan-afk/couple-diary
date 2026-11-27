@@ -156,6 +156,24 @@ async def api_random_movie(request):
     except Exception as e:
         print("Random movie error:", e)
     return web.json_response({"title": "Интерстеллар", "year": "2014", "rating": 8.6, "desc": "Фантастика", "poster": None, "genre": "Фильм"})
+
+async def api_movie_poster(request):
+    title = request.query.get("title", "")
+    mtype = request.query.get("type", "movie")
+    if not title:
+        return web.json_response({"poster": None})
+    endpoint = "tv" if mtype in ("Сериал", "Аниме") else "movie"
+    try:
+        async with aiohttp.ClientSession() as session:
+            url = f"https://api.themoviedb.org/3/search/{endpoint}?api_key=3fd2be6f0c70a2a598f084ddfb75487c&query={title}&language=en"
+            async with session.get(url) as resp:
+                data = await resp.json()
+                if data.get("results") and data["results"][0].get("poster_path"):
+                    poster = "https://image.tmdb.org/t/p/w500" + data["results"][0]["poster_path"]
+                    return web.json_response({"poster": poster})
+    except Exception as e:
+        print("TMDB error:", e)
+    return web.json_response({"poster": None})
     title = request.query.get("title", "")
     mtype = request.query.get("type", "movie")
     if not title:
@@ -249,6 +267,7 @@ async def start_web_server():
     app.router.add_post("/api/mood", api_set_mood)
     app.router.add_get("/api/mood", api_get_mood)
     app.router.add_get("/api/random-movie", api_random_movie)
+    app.router.add_get("/api/poster", api_movie_poster)
     app.router.add_get("/api/date-idea", api_date_idea)
     app.router.add_get("/api/events", api_get_events)
     
