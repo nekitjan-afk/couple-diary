@@ -127,6 +127,7 @@ h2{font-size:24px;font-weight:700;margin-bottom:18px;letter-spacing:-.6px}
     <div id="watchRandom" style="display:none;margin-bottom:16px">
       <div style="background:linear-gradient(145deg,#1a1a2e 0%,#16213e 100%);border-radius:24px;padding:20px;text-align:center;border:1px solid rgba(139,92,246,.2)">
         <div style="font-size:13px;opacity:.6;margin-bottom:8px">Что посмотреть сегодня?</div>
+        <img id="randomMoviePoster" style="width:120px;height:180px;object-fit:cover;border-radius:12px;margin:0 auto 12px;display:none">
         <div id="randomMovieTitle" style="font-size:20px;font-weight:700;margin-bottom:4px">Нажми кнопку</div>
         <div id="randomMovieInfo" style="font-size:13px;opacity:.7;margin-bottom:16px"></div>
         <button onclick="randomMovie()" style="background:linear-gradient(90deg,#7c3aed,#a855f7);width:100%">🎲 Случайный фильм</button>
@@ -726,35 +727,35 @@ function setWishTab(tab) {
 }
 
 const MOVIES = [
-  {title:'Интерстеллар', year:2014, genre:'Фантастика', type:'Фильм'},
-  {title:'Начало', year:2010, genre:'Триллер', type:'Фильм'},
-  {title:'Темный рыцарь', year:2008, genre:'Боевик', type:'Фильм'},
-  {title:'Паразиты', year:2019, genre:'Триллер', type:'Фильм'},
-  {title:'Дюна', year:2021, genre:'Фантастика', type:'Фильм'},
-  {title:'Оппенгеймер', year:2023, genre:'Биография', type:'Фильм'},
-  {title:'Бойцовский клуб', year:1999, genre:'Драма', type:'Фильм'},
-  {title:'Матрица', year:1999, genre:'Фантастика', type:'Фильм'},
-  {title:'Побег из Шоушенка', year:1994, genre:'Драма', type:'Фильм'},
-  {title:'Форрест Гамп', year:1994, genre:'Драма', type:'Фильм'},
-  {title:'Игра в кальмара', year:2021, genre:'Триллер', type:'Сериал'},
-  {title:'Очень странные дела', year:2016, genre:'Фантастика', type:'Сериал'},
-  {title:'Ведьмак', year:2019, genre:'Фэнтези', type:'Сериал'},
-  {title:'Черное зеркало', year:2011, genre:'Фантастика', type:'Сериал'},
-  {title:'Друзья', year:1994, genre:'Комедия', type:'Сериал'},
-  {title:'Офис', year:2005, genre:'Комедия', type:'Сериал'},
-  {title:'Игра престолов', year:2011, genre:'Фэнтези', type:'Сериал'},
-  {title:'Во все тяжкие', year:2008, genre:'Драма', type:'Сериал'},
-  {title:'Шерлок', year:2010, genre:'Детектив', type:'Сериал'},
-  {title:'Рик и Морти', year:2013, genre:'Анимация', type:'Сериал'},
-  {title:'Атака титанов', year:2013, genre:'Аниме', type:'Аниме'},
-  {title:'Тетрадь смерти', year:2006, genre:'Триллер', type:'Аниме'},
-  {title:'Клинок рассекающий демонов', year:2019, genre:'Аниме', type:'Аниме'},
-  {title:'Человек-паук: Через вселенные', year:2018, genre:'Анимация', type:'Фильм'},
-  {title:'Душа', year:2020, genre:'Анимация', type:'Фильм'},
-  {title:'Ла-Ла Ленд', year:2016, genre:'Мюзикл', type:'Фильм'},
-  {title:'Великий Гэтсби', year:2013, genre:'Драма', type:'Фильм'},
-  {title:'Зеленая книга', year:2018, genre:'Драма', type:'Фильм'},
-  {title:'Джокер', year:2019, genre:'Драма', type:'Фильм'}
+  {title:'Интерстеллар', en:'Interstellar', year:2014, genre:'Фантастика', type:'Фильм'},
+  {title:'Начало', en:'Inception', year:2010, genre:'Триллер', type:'Фильм'},
+  {title:'Темный рыцарь', en:'The Dark Knight', year:2008, genre:'Боевик', type:'Фильм'},
+  {title:'Паразиты', en:'Parasite', year:2019, genre:'Триллер', type:'Фильм'},
+  {title:'Дюна', en:'Dune', year:2021, genre:'Фантастика', type:'Фильм'},
+  {title:'Оппенгеймер', en:'Oppenheimer', year:2023, genre:'Биография', type:'Фильм'},
+  {title:'Бойцовский клуб', en:'Fight Club', year:1999, genre:'Драма', type:'Фильм'},
+  {title:'Матрица', en:'The Matrix', year:1999, genre:'Фантастика', type:'Фильм'},
+  {title:'Побег из Шоушенка', en:'The Shawshank Redemption', year:1994, genre:'Драма', type:'Фильм'},
+  {title:'Форрест Гамп', en:'Forrest Gump', year:1994, genre:'Драма', type:'Фильм'},
+  {title:'Игра в кальмара', en:'Squid Game', year:2021, genre:'Триллер', type:'Сериал'},
+  {title:'Очень странные дела', en:'Stranger Things', year:2016, genre:'Фантастика', type:'Сериал'},
+  {title:'Ведьмак', en:'The Witcher', year:2019, genre:'Фэнтези', type:'Сериал'},
+  {title:'Черное зеркало', en:'Black Mirror', year:2011, genre:'Фантастика', type:'Сериал'},
+  {title:'Друзья', en:'Friends', year:1994, genre:'Комедия', type:'Сериал'},
+  {title:'Офис', en:'The Office', year:2005, genre:'Комедия', type:'Сериал'},
+  {title:'Игра престолов', en:'Game of Thrones', year:2011, genre:'Фэнтези', type:'Сериал'},
+  {title:'Во все тяжкие', en:'Breaking Bad', year:2008, genre:'Драма', type:'Сериал'},
+  {title:'Шерлок', en:'Sherlock', year:2010, genre:'Детектив', type:'Сериал'},
+  {title:'Рик и Морти', en:'Rick and Morty', year:2013, genre:'Анимация', type:'Сериал'},
+  {title:'Атака титанов', en:'Attack on Titan', year:2013, genre:'Аниме', type:'Аниме'},
+  {title:'Тетрадь смерти', en:'Death Note', year:2006, genre:'Триллер', type:'Аниме'},
+  {title:'Клинок рассекающий демонов', en:'Demon Slayer', year:2019, genre:'Аниме', type:'Аниме'},
+  {title:'Человек-паук: Через вселенные', en:'Spider-Man: Into the Spider-Verse', year:2018, genre:'Анимация', type:'Фильм'},
+  {title:'Душа', en:'Soul', year:2020, genre:'Анимация', type:'Фильм'},
+  {title:'Ла-Ла Ленд', en:'La La Land', year:2016, genre:'Мюзикл', type:'Фильм'},
+  {title:'Великий Гэтсби', en:'The Great Gatsby', year:2013, genre:'Драма', type:'Фильм'},
+  {title:'Зеленая книга', en:'Green Book', year:2018, genre:'Драма', type:'Фильм'},
+  {title:'Джокер', en:'Joker', year:2019, genre:'Драма', type:'Фильм'}
 ];
 let lastRandomMovie = null;
 
@@ -764,6 +765,38 @@ function randomMovie() {
   document.getElementById('randomMovieTitle').textContent = m.title;
   document.getElementById('randomMovieInfo').textContent = m.type + ' · ' + m.year + ' · ' + m.genre;
   document.getElementById('addRandomBtn').style.display = 'block';
+  const posterEl = document.getElementById('randomMoviePoster');
+  if (posterEl) {
+    posterEl.style.display = 'none';
+    fetchMoviePoster(m.en || m.title, m.type).then(url => {
+      if (url && posterEl) {
+        posterEl.src = url;
+        posterEl.style.display = 'block';
+        lastRandomMovie.poster = url;
+      }
+    });
+  }
+}
+
+async function fetchMoviePoster(title, type) {
+  const isTV = type === 'Сериал' || type === 'Аниме';
+  const endpoint = isTV ? 'tv' : 'movie';
+  try {
+    const r = await fetch('https://api.themoviedb.org/3/search/' + endpoint + '?api_key=3fd2be6f0c70a2a598f084ddfb75487c&query=' + encodeURIComponent(title) + '&language=ru');
+    const d = await r.json();
+    if (d.results && d.results.length) {
+      const match = d.results.find(x => x.original_language === 'en' || x.original_language === 'ja') || d.results[0];
+      if (match.poster_path) return 'https://image.tmdb.org/t/p/w500' + match.poster_path;
+    }
+    if (isTV) {
+      const r2 = await fetch('https://api.themoviedb.org/3/search/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&query=' + encodeURIComponent(title) + '&language=ru');
+      const d2 = await r2.json();
+      if (d2.results && d2.results[0] && d2.results[0].poster_path) {
+        return 'https://image.tmdb.org/t/p/w500' + d2.results[0].poster_path;
+      }
+    }
+  } catch(e) {}
+  return null;
 }
 
 async function addRandomToWish() {
@@ -777,7 +810,7 @@ async function addRandomToWish() {
       cat: 'посмотреть',
       description: lastRandomMovie.type + ', ' + lastRandomMovie.year + ', ' + lastRandomMovie.genre,
       link: '',
-      photo: ''
+      photo: lastRandomMovie.poster || ''
     })
   });
   document.getElementById('addRandomBtn').style.display = 'none';
