@@ -101,7 +101,10 @@ async def api_set_mood(request):
     await db.set_mood(data.get("user_id"), data.get("mood"), data.get("date"))
     return web.json_response({"ok": True})
 
-async def api_delete_wish(request):
+async def api_set_wish_status(request):
+    data = await request.json()
+    await db.set_wish_status(data.get("user_id"), data.get("title"), data.get("status"))
+    return web.json_response({"ok": True})
     data = await request.json()
     await db.delete_wish(data.get("user_id"), data.get("title"))
     return web.json_response({"ok": True})
@@ -114,7 +117,7 @@ async def api_add_wish(request):
 async def api_get_wishes(request):
     user_id = int(request.query.get("user_id", 0))
     wishes = await db.get_wishes(user_id)
-    return web.json_response([{"user_id": w[0], "title": w[1], "cat": w[2], "desc": w[3], "link": w[4], "photo": w[5]} for w in wishes])
+    return web.json_response([{"user_id": w[0], "title": w[1], "cat": w[2], "desc": w[3], "link": w[4], "photo": w[5], "status": w[6]} for w in wishes])
 
 async def api_get_mood(request):
     user_id = int(request.query.get("user_id", 0))
@@ -231,6 +234,7 @@ async def start_web_server():
     app.router.add_post("/api/event", api_add_event)
     app.router.add_post("/api/event/delete", api_delete_event)
     app.router.add_post("/api/reminder", api_add_reminder)
+    app.router.add_post("/api/wish/status", api_set_wish_status)
     app.router.add_post("/api/wish/delete", api_delete_wish)
     app.router.add_post("/api/wish", api_add_wish)
     app.router.add_get("/api/wishes", api_get_wishes)
@@ -253,4 +257,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
